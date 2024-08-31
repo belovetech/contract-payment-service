@@ -7,6 +7,16 @@ import { contracts_status } from '@prisma/client';
 export class ContractsService {
   constructor(private prisma: PrismaService) {}
   create(createContractDto: CreateContractDto, client_id: number) {
+    const isValidContractor = this.prisma.profiles.findUnique({
+      where: {
+        id: createContractDto.contractor_id,
+      },
+    });
+
+    if (!isValidContractor) {
+      throw new NotFoundException('Contractor does not exist');
+    }
+
     return this.prisma.contracts.create({
       data: {
         ...createContractDto,
