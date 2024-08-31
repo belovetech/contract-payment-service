@@ -51,7 +51,7 @@ model jobs {
   description String
   price       Decimal
   is_paid     Boolean
-  paid_date   DateTime
+  paid_date   DateTime?
   contract_id Int
   contract    contracts @relation(fields: [contract_id], references: [id])
   createdAt   DateTime  @default(now())

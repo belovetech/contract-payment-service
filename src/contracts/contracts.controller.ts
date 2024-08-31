@@ -3,9 +3,7 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   UseGuards,
   Request,
 } from '@nestjs/common';
@@ -23,8 +21,10 @@ export class ContractsController {
     @Body() createContractDto: CreateContractDto,
     @Request() { profile },
   ) {
-
-    const contract = await this.contractsService.create(createContractDto, profile.id);
+    const contract = await this.contractsService.create(
+      createContractDto,
+      profile.id,
+    );
     return {
       message: 'Contract created successfully',
       data: contract,
