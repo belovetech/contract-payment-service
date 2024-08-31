@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:15.0-alpine
+    container_name: contract_payment_service-db
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    env_file:
+      - .env.docker
+    ports:
+      - name: db
+        target: 5432
+        host_ip: 127.0.0.1
+        published: '5432'
+        protocol: tcp
+        app_protocol: http
+        mode: host
+    volumes:
+      - ./db/data:/var/lib/postgresql/data/
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  db_data:
+    driver: local
