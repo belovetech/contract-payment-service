@@ -6,13 +6,10 @@ import { PrismaService } from '../prismaClient/prisma.service';
 export class ProfilesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(payload: CreateProfileDto) {
+  async create(createProfileDto: CreateProfileDto) {
     const profile = await this.prisma.profiles.create({
       data: {
-        first_name: payload.first_name,
-        last_name: payload.last_name,
-        profession: payload.profession,
-        role: payload.role,
+        ...createProfileDto,
         balance: 0,
       },
     });
