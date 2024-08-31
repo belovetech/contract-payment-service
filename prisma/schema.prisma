@@ -12,3 +12,61 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model profiles {
+  id                    Int           @id @default(autoincrement())
+  uuid                  String        @unique @default(uuid()) @db.VarChar(50)
+  first_name            String        @db.VarChar(50)
+  last_name             String        @db.VarChar(50)
+  profession            String        @db.VarChar(50)
+  balance               Decimal
+  role                  profiles_role
+  contractsAsClient     contracts[]   @relation("client_contracts")
+  contractsAsContractor contracts[]   @relation("contractor_contracts")
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([profession, role])
+}
+
+model contracts {
+  id            Int              @id @default(autoincrement())
+  uuid          String           @unique @default(uuid()) @db.VarChar(50)
+  client_id     Int
+  contractor_id Int
+  terms         String
+  status        contracts_status
+  jobs          jobs[]
+  client        profiles         @relation("client_contracts", fields: [client_id], references: [id])
+  contractor    profiles         @relation("contractor_contracts", fields: [contractor_id], references: [id])
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([client_id, contractor_id])
+}
+
+model jobs {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique @default(uuid()) @db.VarChar(50)
+  description String
+  price       Decimal
+  is_paid     Boolean
+  paid_date   DateTime
+  contract_id Int
+  contract    contracts @relation(fields: [contract_id], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([contract_id])
+}
+
+enum profiles_role {
+  client
+  contractor
+}
+
+enum contracts_status {
+  new
+  in_progress
+  terminated
+}
