@@ -1,6 +1,15 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Request,
+  Get,
+  UseGuards,
+  Param,
+} from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
+import { AuthGuard } from 'src/profiles/middlewares/auth';
 
 @Controller('jobs')
 export class JobsController {
@@ -12,6 +21,31 @@ export class JobsController {
     return {
       message: 'Job created successfully',
       data: job,
+    };
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('unpaid')
+  async getUnpaidJobs(@Request() { profile }) {
+    const jobs = await this.jobsService.getUnpaidJobs(profile.id);
+    return {
+      message: 'Unpaid jobs retrieved successfully',
+      data: jobs,
+    };
+  }
+
+  @UseGuards(AuthGuard)
+  @Post(':job_id/pay')
+  async payForJob(@Request() { profile }, @Param('job_id') job_id: string) {
+    const { clientProfile } = await this.jobsService.payForJob(
+      Number(job_id),
+      profile.id,
+    );
+    return {
+      message: 'Job paid successfully',
+      data: {
+        clientProfile,
+      },
     };
   }
 }
