@@ -21,9 +21,8 @@ export class BalancesController {
     @Body() payload: DepositDto,
     @Param('user_id') user_id: number,
   ) {
-    console.log({ profile, payload, user_id });
     const updatedProfile = await this.balancesService.depositFunds(
-      profile.id,
+      profile,
       payload.amount,
     );
     return {
