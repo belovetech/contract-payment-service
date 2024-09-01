@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateContractDto } from './dto/create-contract.dto';
-import { PrismaService } from 'src/prismaClient/prisma.service';
+import { PrismaService } from '../prismaClient/prisma.service';
 import { contracts_status } from '@prisma/client';
 
 @Injectable()
@@ -29,14 +33,6 @@ export class ContractsService {
     const contract = await this.prisma.contracts.findUnique({
       where: {
         id,
-        OR: [
-          {
-            client_id: profileId,
-          },
-          {
-            contractor_id: profileId,
-          },
-        ],
       },
     });
 
@@ -44,7 +40,16 @@ export class ContractsService {
       throw new NotFoundException('Contract not found');
     }
 
-    return contract;
+    if (
+      contract.client_id === profileId ||
+      contract.contractor_id === profileId
+    ) {
+      return contract;
+    }
+
+    throw new ForbiddenException(
+      'You are not authorized to view this contract',
+    );
   }
 
   async getContracts(profileId: number) {
