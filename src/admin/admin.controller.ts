@@ -1,9 +1,10 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Logger } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { Response } from '../types/response.type';
 
 @Controller('admin')
 export class AdminController {
+  private readonly logger = new Logger(AdminController.name);
   constructor(private readonly adminService: AdminService) {}
 
   @Get('best-profession')
@@ -11,11 +12,21 @@ export class AdminController {
     @Query('start') start: string,
     @Query('end') end: string,
   ): Promise<Response> {
-    const profession = await this.adminService.getBestProfession(start, end);
-    return {
-      message: 'The profession that earned the most money',
-      data: { profession },
-    };
+    try {
+      this.logger.log('Start: Retrieving best profession');
+      const profession = await this.adminService.getBestProfession(start, end);
+      this.logger.log('End: Best profession retrieved');
+      return {
+        message: 'The profession that earned the most money',
+        data: { profession },
+      };
+    } catch (error) {
+      this.logger.error({
+        error: error.message,
+        msg: "Couldn't retrieve best profession",
+      });
+      throw error;
+    }
   }
 
   @Get('best-clients')
@@ -24,10 +35,20 @@ export class AdminController {
     @Query('end') end: string,
     @Query('limit') limit: number,
   ): Promise<Response> {
-    const clients = await this.adminService.getBestClients(start, end, limit);
-    return {
-      message: 'The clients that paid the most money',
-      data: clients,
-    };
+    try {
+      this.logger.log('Start: Retrieving best clients');
+      const clients = await this.adminService.getBestClients(start, end, limit);
+      this.logger.log('End: Best clients retrieved');
+      return {
+        message: 'The clients that paid the most money',
+        data: clients,
+      };
+    } catch (error) {
+      this.logger.error({
+        error: error.message,
+        msg: "Couldn't retrieve best clients",
+      });
+      throw error;
+    }
   }
 }

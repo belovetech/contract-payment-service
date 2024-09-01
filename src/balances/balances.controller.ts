@@ -5,6 +5,7 @@ import {
   UseGuards,
   Request,
   Param,
+  Logger,
 } from '@nestjs/common';
 import { BalancesService } from './balances.service';
 import { AuthGuard } from 'src/profiles/middlewares/auth';
@@ -12,6 +13,7 @@ import { DepositDto } from './dto/deposit.dto';
 
 @Controller('balances')
 export class BalancesController {
+  private readonly logger = new Logger(BalancesController.name);
   constructor(private readonly balancesService: BalancesService) {}
 
   @UseGuards(AuthGuard)
@@ -21,13 +23,23 @@ export class BalancesController {
     @Body() payload: DepositDto,
     @Param('user_id') user_id: number,
   ) {
-    const updatedProfile = await this.balancesService.depositFunds(
-      profile,
-      payload.amount,
-    );
-    return {
-      message: 'Funds deposited successfully',
-      data: updatedProfile,
-    };
+    try {
+      this.logger.log('Start: Depositing funds', { user_id: user_id });
+      const updatedProfile = await this.balancesService.depositFunds(
+        profile,
+        payload.amount,
+      );
+      this.logger.log('End: Funds deposited', { user_id: user_id });
+      return {
+        message: 'Funds deposited successfully',
+        data: updatedProfile,
+      };
+    } catch (error) {
+      this.logger.error({
+        error: error.message,
+        msg: "Couldn't deposit funds",
+      });
+      throw error;
+    }
   }
 }

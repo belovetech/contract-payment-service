@@ -18,7 +18,6 @@ export class BalancesService {
       totalOutstandingPayments,
     );
 
-    // 'You cannot deposit more than 25% of your total outstanding payments',
     if (amount > allowedDepositLimit) {
       throw new PreconditionFailedException(
         `You cannot deposit more than ${allowedDepositLimit} at once`,
