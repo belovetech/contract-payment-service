@@ -1,130 +1,70 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { Sql } from '@prisma/client/runtime/library';
-import { PrismaService } from 'src/prismaClient/prisma.service';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { PrismaService } from '../prismaClient/prisma.service';
+import { BestProfession } from './entities/best.profession.entity';
+import { BestClients } from './entities/best.clients';
 
 @Injectable()
 export class AdminService {
   constructor(private prisma: PrismaService) {}
 
-  async findBestProfession(start: string, end: string): Promise<string | null> {
+  async getBestProfession(
+    start: string,
+    end: string,
+  ): Promise<BestProfession | null> {
+    const { startDate, endDate } = this.validateDate(start, end);
     const result = await this.prisma.$queryRaw`
-      SELECT profession
-      FROM profiles
-      JOIN contracts ON profiles.id = contracts.contractor_id
-      JOIN jobs ON contracts.id = jobs.contract_id
-      WHERE contracts.created_at >= ${new Date(start)} AND contracts.created_at <= ${new Date(end)}
+      SELECT p.profession, SUM(j.price) as total_earnings
+      FROM profiles p
+      JOIN contracts c ON p.id = c.contractor_id
+      JOIN jobs j ON c.id = j.contract_id
+      WHERE p.role = 'contractor' AND j.is_paid = TRUE AND j.paid_date BETWEEN ${startDate} AND ${endDate}
       GROUP BY profession
-      ORDER BY SUM(jobs.price) DESC
+      ORDER BY total_earnings DESC
       LIMIT 1
     `;
     return result[0]?.profession || null;
   }
 
-  async getTopClients(start: string, end: string, limit: number = 2) {
-    const formattedStart = new Date(start);
-    const formattedEnd = new Date(end);
+  async getBestClients(
+    start: string,
+    end: string,
+    limit: number = 2,
+  ): Promise<BestClients> {
+    const { startDate, endDate } = this.validateDate(start, end);
+    const result = await this.prisma.$queryRaw`
+    SELECT p.id AS client_id, CONCAT(p.first_name, ' ', p.last_name) AS full_name, SUM(j.price) AS total_paid
+    FROM profiles p
+    JOIN contracts c ON p.id = c.client_id
+    JOIN jobs j ON c.id = j.contract_id
+    WHERE p.role = 'client' AND j.is_paid = TRUE AND j.paid_date BETWEEN ${startDate} AND ${endDate}
+    GROUP BY p.id, p.first_name, p.last_name
+    ORDER BY total_paid DESC
+    LIMIT ${limit};
+    `;
+    return result as BestClients;
+  }
 
-    // if (formattedStart == 'Invalid Date' || formattedEnd == 'Invalid Date') {
-    //   throw new Error('Invalid date range');
-    // }
-
-    if (formattedStart > formattedEnd) {
-      throw new Error('Invalid date range');
+  public validateDate(
+    start: string,
+    end: string,
+  ): { startDate: Date; endDate: Date } {
+    if (!start || !end) {
+      throw new BadRequestException('Start date or end date is missing.');
     }
 
-    const result = await this.prisma.$queryRaw`
-      SELECT client_id, last_name, first_name, SUM(jobs.price) as total_paid
-      FROM profiles
-      JOIN contracts ON profiles.id = contracts.client_id
-      JOIN jobs ON contracts.id = jobs.contract_id
-      WHERE jobs.is_paid = true AND jobs.paid_date >= ${new Date(start)} AND jobs.paid_date <= ${new Date(end)}
-      GROUP BY client_id
-      ORDER BY total_paid DESC
-      LIMIT ${limit}
-    `;
+    const startDate = new Date(start);
+    const endDate = new Date(end);
 
-    console.log({ result });
-    return result[0] || null;
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new BadRequestException(
+        'Invalid date format. Please use a valid date string.',
+      );
+    }
+
+    if (startDate > endDate) {
+      throw new BadRequestException('Start date is later than end date.');
+    }
+
+    return { startDate, endDate };
   }
 }
-
-// const result = await this.prisma.jobs.groupBy({
-//   by: ['contract_id'],
-//   where: {
-//     is_paid: true,
-//     paid_date: {
-//       gte: new Date(start),
-//       lte: new Date(end),
-//     },
-//   },
-//   _sum: {
-//     price: true,
-//   },
-//   orderBy: {
-//     _sum: {
-//       price: 'desc',
-//     },
-//   },
-//   take: 1,
-// });
-
-// console.log(result);
-
-// if (result.length === 0) {
-//   return null;
-// }
-
-// const topContract = await this.prisma.contracts.findUnique({
-//   where: { id: result[0].contract_id },
-//   include: { contractor: { select: { profession: true } } },
-// });
-
-// return topContract?.contractor.profession || null;
-
-/**
- * const topContract = await this.prisma.jobs.groupBy({
-      by: ['contract_id'],
-      where: {
-        is_paid: true,
-        paid_date: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      _sum: {
-        price: true,
-      },
-      orderBy: {
-        _sum: {
-          price: 'desc',
-        },
-      },
-      take: limit,
-    });
-
-    const clients = await this.prisma.profiles.findMany({
-      where: {
-        id: {
-          in: topContract.map((client) => client.contract_id),
-        },
-      },
-      include: {
-        contractsAsClient: {
-          include: {
-            jobs: {
-              where: {
-                is_paid: true,
-                paid_date: {
-                  gte: startDate,
-                  lte: endDate,
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    return clients;
- */

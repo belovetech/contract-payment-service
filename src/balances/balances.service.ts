@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { contracts_status } from '@prisma/client';
 import { PrismaService } from '../prismaClient/prisma.service';
-import { Profile } from './entity/profile-entity';
+import { Profile } from './entities/profile.entity';
 
 @Injectable()
 export class BalancesService {
