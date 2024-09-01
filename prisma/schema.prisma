@@ -19,12 +19,12 @@ model profiles {
   first_name            String        @db.VarChar(50)
   last_name             String        @db.VarChar(50)
   profession            String        @db.VarChar(50)
-  balance               Decimal
+  balance               Decimal       @default(0.0) @db.Decimal(10, 2)
   role                  profiles_role
   contractsAsClient     contracts[]   @relation("client_contracts")
   contractsAsContractor contracts[]   @relation("contractor_contracts")
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
+  created_at            DateTime      @default(now())
+  updated_at            DateTime      @updatedAt
 
   @@index([profession, role])
 }
@@ -39,8 +39,8 @@ model contracts {
   jobs          jobs[]
   client        profiles         @relation("client_contracts", fields: [client_id], references: [id])
   contractor    profiles         @relation("contractor_contracts", fields: [contractor_id], references: [id])
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  created_at    DateTime         @default(now())
+  updated_at    DateTime         @updatedAt
 
   @@index([client_id, contractor_id])
 }
@@ -49,13 +49,13 @@ model jobs {
   id          Int       @id @default(autoincrement())
   uuid        String    @unique @default(uuid()) @db.VarChar(50)
   description String
-  price       Decimal
+  price       Decimal   @db.Decimal(10, 2)
   is_paid     Boolean
   paid_date   DateTime?
   contract_id Int
   contract    contracts @relation(fields: [contract_id], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
 
   @@index([contract_id])
 }
