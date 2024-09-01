@@ -18,8 +18,11 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "docker:compose:up": "docker compose up -d",
-    "docker:build": "docker build -t contract_payment_service .",
+    "docker:start": "docker compose up --build",
+    "docker:stop": "docker compose down",
+    "docker:test:start": "docker-compose -f docker-compose.test.yml up --build --force-recreate --remove-orphans",
+    "docker:test:stop": "docker-compose -f docker-compose.test.yml down",
+    "docker:test:exec": "docker exec -it contract_payment_service_test npm run test",
     "generate:prisma": "prisma generate",
     "migrate:dev": "prisma migrate dev --name",
     "seed": "ts-node --transpile-only prisma/seed/seed.ts"

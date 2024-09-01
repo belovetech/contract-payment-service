@@ -43,8 +43,9 @@ lerna-debug.log*
 .env.local
 
 # Docker
-.env.docker
-db/data
+# .env.docker
+# .env.docker.test
+db
 
 # temp directory
 .temp
