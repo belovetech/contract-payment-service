@@ -37,14 +37,14 @@ export class JobsController {
   @UseGuards(AuthGuard)
   @Post(':job_id/pay')
   async payForJob(@Request() { profile }, @Param('job_id') job_id: string) {
-    const { clientProfile } = await this.jobsService.payForJob(
+    const { updatedClient } = await this.jobsService.payForJob(
       Number(job_id),
       profile.id,
     );
     return {
       message: 'Job paid successfully',
       data: {
-        clientProfile,
+        updatedClient,
       },
     };
   }

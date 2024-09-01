@@ -4,6 +4,6 @@ export class Job {
   price: number;
   contract_id: number;
   is_paid: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: Date;
+  updated_at: Date;
 }

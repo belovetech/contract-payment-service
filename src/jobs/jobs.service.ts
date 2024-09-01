@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  PreconditionFailedException,
+} from '@nestjs/common';
 import { CreateJobDto } from './dto/create-job.dto';
-import { PrismaService } from 'src/prismaClient/prisma.service';
+import { PrismaService } from '../prismaClient/prisma.service';
 import { contracts_status } from '@prisma/client';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { Job } from './entities/job.entity';
@@ -50,7 +55,38 @@ export class JobsService {
     });
   }
 
-  async payForJob(job_id: number, profile_id: number) {
+  async payForJob(job_id: number, client_id: number) {
+    //TODO! Implement idempotency
+    /**
+     * Check if job exists
+     * check the client's balance
+     * create a transaction
+     * decrement the client's balance
+     * increment the contractor's balance
+     * mark the job as paid
+     * commit the transaction
+     *
+     * Question1:
+     *  do we check balance inside or outside the transaction?
+     * Answer1:
+     *  Inside the transaction
+     *
+     * Question2:
+     *  What happesn if check the client's balance inside the transaction without locking the row?
+     * Answer2:
+     *  The client's balance can change between the time we check the balance and the time we decrement the balance
+     *
+     * Solution:
+     *  Select the client's balance for a write operation with a lock
+     *  check if the client has enough balance
+     *     if not, rollback the transaction
+     *     if yes, decrement the client's balance
+     *     increment the contractor's balance
+     *     mark the job as paid
+     *     commit the transaction
+     *
+     *
+     */
     const job = await this.prisma.jobs.findUnique({
       where: {
         id: job_id,
@@ -71,53 +107,61 @@ export class JobsService {
       throw new NotFoundException('Contract not found');
     }
 
-    if (contract.client_id !== profile_id) {
+    if (contract.client_id !== client_id) {
       throw new NotFoundException('You are not authorized to pay for this job');
     }
 
     if (job.is_paid) {
-      throw new NotFoundException('Job has already been paid for');
+      throw new BadRequestException('Job has already been paid for');
     }
 
-    const client = await this.profileService.getProfileById(profile_id);
+    return this.prisma.$transaction(async (trx) => {
+      const client = await trx.profiles.findUnique({
+        where: {
+          id: client_id,
+        },
+        select: {
+          balance: true,
+        },
+      });
 
-    if (client.balance < job.price) {
-      throw new NotFoundException('Insufficient balance');
-    }
+      if (job.price > client.balance) {
+        throw new PreconditionFailedException('Insufficient balance');
+      }
 
-    const [clientProfile, contractorProfile, _] =
-      await this.prisma.$transaction([
-        this.prisma.profiles.update({
-          where: {
-            id: profile_id,
+      const updatedClient = await trx.profiles.update({
+        where: {
+          id: client_id,
+        },
+        data: {
+          balance: {
+            decrement: job.price,
           },
-          data: {
-            balance: {
-              decrement: job.price,
-            },
-          },
-        }),
+        },
+      });
 
-        this.prisma.profiles.update({
-          where: {
-            id: contract.contractor_id,
+      await trx.profiles.update({
+        where: {
+          id: contract.contractor_id,
+        },
+        data: {
+          balance: {
+            increment: job.price,
           },
-          data: {
-            balance: {
-              increment: job.price,
-            },
-          },
-        }),
+        },
+      });
 
-        this.prisma.jobs.update({
-          where: {
-            id: job_id,
-          },
-          data: {
-            is_paid: true,
-          },
-        }),
-      ]);
-    return { clientProfile, contractorProfile };
+      await trx.jobs.update({
+        where: {
+          id: job_id,
+        },
+        data: {
+          is_paid: true,
+          paid_date: new Date(),
+        },
+      });
+
+      return { updatedClient };
+    });
   }
 }
