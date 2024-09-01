@@ -21,7 +21,8 @@
     "docker:compose:up": "docker compose up -d",
     "docker:build": "docker build -t contract_payment_service .",
     "generate:prisma": "prisma generate",
-    "migrate:dev": "prisma migrate dev --name"
+    "migrate:dev": "prisma migrate dev --name",
+    "seed": "ts-node --transpile-only prisma/seed/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
