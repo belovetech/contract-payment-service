@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { PrismaService } from '../prismaClient/prisma.service';
-import { contracts_status } from '@prisma/client';
+import { contracts_status, profiles_role } from '@prisma/client';
 
 @Injectable()
 export class ProfilesService {
@@ -28,5 +28,13 @@ export class ProfilesService {
     }
 
     return profile;
+  }
+
+  async getAllProfiles(role: profiles_role) {
+    return this.prisma.profiles.findMany({
+      where: {
+        role,
+      },
+    });
   }
 }

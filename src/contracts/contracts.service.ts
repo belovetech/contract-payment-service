@@ -34,6 +34,16 @@ export class ContractsService {
       where: {
         id,
       },
+      include: {
+        jobs: {
+          select: {
+            id: true,
+            description: true,
+            price: true,
+            is_paid: true,
+          },
+        },
+      },
     });
 
     if (!contract) {
