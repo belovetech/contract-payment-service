@@ -11,7 +11,6 @@ export class ProfilesService {
     const profile = await this.prisma.profiles.create({
       data: {
         ...createProfileDto,
-        balance: 0,
       },
     });
     return profile;
