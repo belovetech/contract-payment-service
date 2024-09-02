@@ -12,8 +12,10 @@ import {
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { AuthGuard } from '../profiles/middlewares/auth';
+import { ApiBody, ApiHeader, ApiParam, ApiTags } from '@nestjs/swagger';
 
 @Controller('jobs')
+@ApiTags('Jobs')
 export class JobsController {
   private readonly logger = new Logger(JobsController.name);
   constructor(private readonly jobsService: JobsService) {}
@@ -38,6 +40,7 @@ export class JobsController {
   }
 
   @UseGuards(AuthGuard)
+  @ApiHeader({ name: 'profile_id', required: true })
   @Get('unpaid')
   async getUnpaidJobs(@Request() { profile }) {
     try {
@@ -59,6 +62,8 @@ export class JobsController {
 
   @UseGuards(AuthGuard)
   @Post(':job_id/pay')
+  @ApiParam({ name: 'job_id', required: true })
+  @ApiHeader({ name: 'profile_id', required: true })
   async payForJob(
     @Request() { profile },
     @Param('job_id', ParseIntPipe) job_id: number,

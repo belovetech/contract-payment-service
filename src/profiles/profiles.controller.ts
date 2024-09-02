@@ -12,8 +12,17 @@ import { ProfilesService } from './profiles.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { AuthGuard } from './middlewares/auth';
 import { GetProfilesDto } from './dto/get-profiles.dto';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiHeader,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @Controller('profiles')
+@ApiTags('Profiles')
 export class ProfilesController {
   private readonly logger = new Logger(ProfilesController.name);
   constructor(private readonly profilesService: ProfilesService) {}
@@ -38,6 +47,7 @@ export class ProfilesController {
   }
 
   @UseGuards(AuthGuard)
+  @ApiHeader({ name: 'profile_id', required: true })
   @Get('me')
   async getProfile(@Request() { profile }) {
     try {
@@ -56,6 +66,8 @@ export class ProfilesController {
   }
 
   @Get()
+  @ApiCreatedResponse({ type: GetProfilesDto })
+  @ApiQuery({ name: 'role', required: false, enum: ['client', 'contractor'] })
   async getAllProfiles(@Query() { role }: GetProfilesDto) {
     try {
       this.logger.log('Start: Retrieving all profiles');

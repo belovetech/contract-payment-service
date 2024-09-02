@@ -10,14 +10,18 @@ import {
 import { BalancesService } from './balances.service';
 import { AuthGuard } from '../profiles/middlewares/auth';
 import { DepositDto } from './dto/deposit.dto';
+import { ApiHeader, ApiParam, ApiTags } from '@nestjs/swagger';
 
 @Controller('balances')
+@ApiTags('Balances')
 export class BalancesController {
   private readonly logger = new Logger(BalancesController.name);
   constructor(private readonly balancesService: BalancesService) {}
 
   @UseGuards(AuthGuard)
   @Post('deposit/:user_id')
+  @ApiHeader({ name: 'profile_id', required: true })
+  @ApiParam({ name: 'user_id', required: true })
   async depositFunds(
     @Request() { profile },
     @Body() payload: DepositDto,

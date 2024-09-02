@@ -22,7 +22,8 @@ export class AdminService {
       ORDER BY total_earnings DESC
       LIMIT 1
     `;
-    return result ? result[0] : null;
+    const bestProfession = result as BestProfession[];
+    return bestProfession[0] || {};
   }
 
   async getBestClients(

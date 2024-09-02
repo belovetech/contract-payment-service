@@ -11,14 +11,17 @@ import {
 import { ContractsService } from './contracts.service';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { AuthGuard } from '../profiles/middlewares/auth';
+import { ApiHeader, ApiParam, ApiTags } from '@nestjs/swagger';
 
 @Controller('contracts')
+@ApiTags('Contracts')
 export class ContractsController {
   private readonly logger = new Logger(ContractsController.name);
   constructor(private readonly contractsService: ContractsService) {}
 
   @Post()
   @UseGuards(AuthGuard)
+  @ApiHeader({ name: 'profile_id', required: true })
   async create(
     @Body() createContractDto: CreateContractDto,
     @Request() { profile },
@@ -45,6 +48,7 @@ export class ContractsController {
 
   @Get()
   @UseGuards(AuthGuard)
+  @ApiHeader({ name: 'profile_id', required: true })
   async getContracts(@Request() { profile }) {
     try {
       this.logger.log('Start: Retrieving contracts');
@@ -68,6 +72,8 @@ export class ContractsController {
 
   @Get(':id')
   @UseGuards(AuthGuard)
+  @ApiParam({ name: 'id', required: true })
+  @ApiHeader({ name: 'profile_id', required: true })
   async getContractById(@Param('id') id: number, @Request() { profile }) {
     try {
       this.logger.log('Start: Retrieving contract');
