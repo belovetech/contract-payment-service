@@ -10,7 +10,7 @@ import { Profile } from './entities/profile.entity';
 @Injectable()
 export class BalancesService {
   constructor(private prisma: PrismaService) {}
-  async depositFunds(client: Profile, amount: number) {
+async depositFunds(client: Profile, amount: number) {
     const totalOutstandingPayments =
       await this.getTotalOutstandingPaymentsValue(client.id);
 
@@ -38,13 +38,13 @@ export class BalancesService {
     return updatedProfile;
   }
 
-  private calculateAllowedDepositLimit(
+  public calculateAllowedDepositLimit(
     totalOutstandingPayments: number,
   ): number {
     return totalOutstandingPayments * 0.25;
   }
 
-  private async getTotalOutstandingPaymentsValue(
+  public async getTotalOutstandingPaymentsValue(
     client_id: number,
   ): Promise<number> {
     const totalOutstandingPayments = await this.prisma.jobs.aggregate({

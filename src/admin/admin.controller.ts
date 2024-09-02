@@ -17,8 +17,8 @@ export class AdminController {
       const profession = await this.adminService.getBestProfession(start, end);
       this.logger.log('End: Best profession retrieved');
       return {
-        message: 'The profession that earned the most money',
-        data: { profession },
+        message: 'Best profession retrieved successfully',
+        data: profession,
       };
     } catch (error) {
       this.logger.error({
@@ -33,14 +33,14 @@ export class AdminController {
   async getBestClients(
     @Query('start') start: string,
     @Query('end') end: string,
-    @Query('limit') limit: number,
+    @Query('limit') limit?: number,
   ): Promise<Response> {
     try {
       this.logger.log('Start: Retrieving best clients');
       const clients = await this.adminService.getBestClients(start, end, limit);
       this.logger.log('End: Best clients retrieved');
       return {
-        message: 'The clients that paid the most money',
+        message: 'Best clients retrieved successfully',
         data: clients,
       };
     } catch (error) {

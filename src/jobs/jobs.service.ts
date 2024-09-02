@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   PreconditionFailedException,
@@ -7,15 +8,10 @@ import {
 import { CreateJobDto } from './dto/create-job.dto';
 import { PrismaService } from '../prismaClient/prisma.service';
 import { contracts_status } from '@prisma/client';
-import { ProfilesService } from 'src/profiles/profiles.service';
-import { Job } from './entities/job.entity';
 
 @Injectable()
 export class JobsService {
-  constructor(
-    private prisma: PrismaService,
-    private profileService: ProfilesService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async create(createJobDto: CreateJobDto) {
     const isValidContract = await this.prisma.contracts.findUnique({
@@ -56,40 +52,17 @@ export class JobsService {
   }
 
   async payForJob(job_id: number, client_id: number) {
-    //TODO! Implement idempotency
-    /**
-     * Check if job exists
-     * check the client's balance
-     * create a transaction
-     * decrement the client's balance
-     * increment the contractor's balance
-     * mark the job as paid
-     * commit the transaction
-     *
-     * Question1:
-     *  do we check balance inside or outside the transaction?
-     * Answer1:
-     *  Inside the transaction
-     *
-     * Question2:
-     *  What happesn if check the client's balance inside the transaction without locking the row?
-     * Answer2:
-     *  The client's balance can change between the time we check the balance and the time we decrement the balance
-     *
-     * Solution:
-     *  Select the client's balance for a write operation with a lock
-     *  check if the client has enough balance
-     *     if not, rollback the transaction
-     *     if yes, decrement the client's balance
-     *     increment the contractor's balance
-     *     mark the job as paid
-     *     commit the transaction
-     *
-     *
-     */
     const job = await this.prisma.jobs.findUnique({
       where: {
         id: job_id,
+      },
+      include: {
+        contract: {
+          select: {
+            client_id: true,
+            contractor_id: true,
+          },
+        },
       },
     });
 
@@ -97,18 +70,10 @@ export class JobsService {
       throw new NotFoundException('Job not found');
     }
 
-    const contract = await this.prisma.contracts.findUnique({
-      where: {
-        id: job.contract_id,
-      },
-    });
-
-    if (!contract) {
-      throw new NotFoundException('Contract not found');
-    }
-
-    if (contract.client_id !== client_id) {
-      throw new NotFoundException('You are not authorized to pay for this job');
+    if (job.contract?.client_id !== client_id) {
+      throw new ForbiddenException(
+        'You are not authorized to pay for this job',
+      );
     }
 
     if (job.is_paid) {
@@ -124,6 +89,10 @@ export class JobsService {
           balance: true,
         },
       });
+
+      if (!client) {
+        throw new NotFoundException('Client not found');
+      }
 
       if (job.price > client.balance) {
         throw new PreconditionFailedException('Insufficient balance');
@@ -142,7 +111,7 @@ export class JobsService {
 
       await trx.profiles.update({
         where: {
-          id: contract.contractor_id,
+          id: job.contract.contractor_id,
         },
         data: {
           balance: {
@@ -161,7 +130,38 @@ export class JobsService {
         },
       });
 
-      return { updatedClient };
+      return updatedClient;
     });
   }
 }
+//TODO! Implement idempotency
+/**
+ * Check if job exists
+ * check the client's balance
+ * create a transaction
+ * decrement the client's balance
+ * increment the contractor's balance
+ * mark the job as paid
+ * commit the transaction
+ *
+ * Question1:
+ *  do we check balance inside or outside the transaction?
+ * Answer1:
+ *  Inside the transaction
+ *
+ * Question2:
+ *  What happesn if check the client's balance inside the transaction without locking the row?
+ * Answer2:
+ *  The client's balance can change between the time we check the balance and the time we decrement the balance
+ *
+ * Solution:
+ *  Select the client's balance for a write operation with a lock
+ *  check if the client has enough balance
+ *     if not, rollback the transaction
+ *     if yes, decrement the client's balance
+ *     increment the contractor's balance
+ *     mark the job as paid
+ *     commit the transaction
+ *
+ *
+ */

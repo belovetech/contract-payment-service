@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ContractsService } from './contracts.service';
 import { CreateContractDto } from './dto/create-contract.dto';
-import { AuthGuard } from 'src/profiles/middlewares/auth';
+import { AuthGuard } from '../profiles/middlewares/auth';
 
 @Controller('contracts')
 export class ContractsController {
@@ -68,7 +68,7 @@ export class ContractsController {
 
   @Get(':id')
   @UseGuards(AuthGuard)
-  async getContract(@Param('id') id: string, @Request() { profile }) {
+  async getContractById(@Param('id') id: number, @Request() { profile }) {
     try {
       this.logger.log('Start: Retrieving contract');
       const contract = await this.contractsService.getContractById(

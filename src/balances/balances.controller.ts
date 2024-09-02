@@ -8,7 +8,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { BalancesService } from './balances.service';
-import { AuthGuard } from 'src/profiles/middlewares/auth';
+import { AuthGuard } from '../profiles/middlewares/auth';
 import { DepositDto } from './dto/deposit.dto';
 
 @Controller('balances')

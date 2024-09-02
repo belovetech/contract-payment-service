@@ -22,7 +22,7 @@ export class AdminService {
       ORDER BY total_earnings DESC
       LIMIT 1
     `;
-    return result[0]?.profession || null;
+    return result ? result[0] : null;
   }
 
   async getBestClients(

@@ -25,4 +25,6 @@ COPY --from=builder /app/package.json ./package.json
 
 EXPOSE 3000
 
+ENTRYPOINT ["./startup.sh"]
+
 CMD ["npm", "run", "start"]

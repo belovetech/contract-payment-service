@@ -7,10 +7,11 @@ import {
   UseGuards,
   Param,
   Logger,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
-import { AuthGuard } from 'src/profiles/middlewares/auth';
+import { AuthGuard } from '../profiles/middlewares/auth';
 
 @Controller('jobs')
 export class JobsController {
@@ -58,17 +59,19 @@ export class JobsController {
 
   @UseGuards(AuthGuard)
   @Post(':job_id/pay')
-  async payForJob(@Request() { profile }, @Param('job_id') job_id: string) {
+  async payForJob(
+    @Request() { profile },
+    @Param('job_id', ParseIntPipe) job_id: number,
+  ) {
     try {
-      const { updatedClient } = await this.jobsService.payForJob(
-        Number(job_id),
+      const clientProfile = await this.jobsService.payForJob(
+        job_id,
         profile.id,
       );
+
       return {
         message: 'Job paid successfully',
-        data: {
-          updatedClient,
-        },
+        data: clientProfile,
       };
     } catch (error) {
       this.logger.error({
