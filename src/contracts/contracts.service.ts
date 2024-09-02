@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { PrismaService } from '../prismaClient/prisma.service';
-import { contracts, contracts_status } from '@prisma/client';
+import { contracts, contracts_status, profiles_role } from '@prisma/client';
 import { Pagination, PaginationParam } from 'src/utils/types';
 import PaginationUtil from '../utils/pagination.util';
 
@@ -15,32 +15,36 @@ export class ContractsService {
     private prisma: PrismaService,
     private pagination: PaginationUtil,
   ) {}
-  create(
-    createContractDto: CreateContractDto,
-    client_id: number,
-  ): Promise<contracts> {
-    const isValidContractor = this.prisma.profiles.findUnique({
-      where: {
-        id: createContractDto.contractor_id,
-      },
-    });
+  create(dto: CreateContractDto, client_id: number): Promise<contracts> {
+    return this.prisma.$transaction(async (trx) => {
+      const isValidContractor = await trx.profiles.findUnique({
+        where: {
+          id: dto.contractor_id,
+          role: profiles_role.contractor,
+        },
+        select: {
+          id: true,
+        },
+      });
 
-    if (!isValidContractor) {
-      throw new NotFoundException('Contractor does not exist');
-    }
+      if (!isValidContractor) {
+        throw new NotFoundException('Contractor does not exist');
+      }
 
-    return this.prisma.contracts.create({
-      data: {
-        ...createContractDto,
-        client_id: client_id,
-      },
+      return trx.contracts.create({
+        data: {
+          ...dto,
+          client_id: client_id,
+        },
+      });
     });
   }
 
   async getContractById(id: number, profileId: number): Promise<contracts> {
-    const contract = await this.prisma.contracts.findUnique({
+    const contract = await this.prisma.contracts.findFirst({
       where: {
         id,
+        OR: [{ client_id: profileId }, { contractor_id: profileId }],
       },
       include: {
         jobs: {
@@ -55,19 +59,12 @@ export class ContractsService {
     });
 
     if (!contract) {
-      throw new NotFoundException('Contract not found');
+      throw new NotFoundException(
+        'Contract not found or you are not authorized to view it',
+      );
     }
 
-    if (
-      contract.client_id === profileId ||
-      contract.contractor_id === profileId
-    ) {
-      return contract;
-    }
-
-    throw new ForbiddenException(
-      'You are not authorized to view this contract',
-    );
+    return contract;
   }
 
   async getContracts(
@@ -76,14 +73,7 @@ export class ContractsService {
   ): Promise<{ contracts: contracts[]; pagination: Pagination }> {
     const { take, skip } = this.pagination.calculatePagination(query);
     const whereQuery = {
-      OR: [
-        {
-          client_id: profileId,
-        },
-        {
-          contractor_id: profileId,
-        },
-      ],
+      OR: [{ client_id: profileId }, { contractor_id: profileId }],
       status: {
         not: contracts_status.terminated,
       },

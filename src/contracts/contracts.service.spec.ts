@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { contracts_status, PrismaClient } from '@prisma/client';
+import { contracts_status, PrismaClient, profiles_role } from '@prisma/client';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { ContractsService } from './contracts.service';
 import { PrismaService } from '../prismaClient/prisma.service';
@@ -36,8 +36,11 @@ describe('ContractsService', () => {
 
   describe('create contact', () => {
     it('should create a contract when valid contractor and client IDs are provided', async () => {
-      prismaMock.profiles.findUnique.mockResolvedValue(profile);
-      prismaMock.contracts.create.mockResolvedValue(contract);
+      prismaMock.$transaction.mockImplementation(async (callback) => {
+        prismaMock.profiles.findUnique.mockResolvedValue(profile);
+        prismaMock.contracts.create.mockResolvedValue(contract);
+        return callback(prismaMock);
+      });
 
       const createContractDto = {
         terms: 'some terms',
@@ -48,7 +51,13 @@ describe('ContractsService', () => {
       const result = await service.create(createContractDto, 1);
       expect(result).toEqual(contract);
       expect(prismaMock.profiles.findUnique).toHaveBeenCalledWith({
-        where: { id: 1 },
+        where: {
+          id: createContractDto.contractor_id,
+          role: profiles_role.contractor,
+        },
+        select: {
+          id: true,
+        },
       });
       expect(prismaMock.contracts.create).toHaveBeenCalledWith({
         data: { ...createContractDto, client_id: 1 },
@@ -56,8 +65,10 @@ describe('ContractsService', () => {
     });
 
     it('should throw NotFoundException when the contractor does not exist', async () => {
-      prismaMock.profiles.findUnique.mockResolvedValue(null);
-      prismaMock.contracts.create.mockRejectedValue(new NotFoundException());
+      prismaMock.$transaction.mockImplementation(async (callback) => {
+        prismaMock.profiles.findUnique.mockResolvedValue(null);
+        return callback(prismaMock);
+      });
 
       const createContractDto = {
         terms: 'some terms',
@@ -66,32 +77,60 @@ describe('ContractsService', () => {
       };
 
       await expect(service.create(createContractDto, 1)).rejects.toThrow(
-        new NotFoundException(),
+        NotFoundException,
       );
+
       expect(prismaMock.profiles.findUnique).toHaveBeenCalledWith({
-        where: { id: 1 },
+        where: {
+          id: createContractDto.contractor_id,
+          role: profiles_role.contractor,
+        },
+        select: {
+          id: true,
+        },
       });
+      expect(prismaMock.contracts.create).not.toHaveBeenCalled();
     });
   });
 
   describe('getContractById', () => {
     it('should return a contract when a valid id is provided', async () => {
-      prismaMock.contracts.findUnique.mockResolvedValue(contract);
+      prismaMock.contracts.findFirst.mockResolvedValue(contract);
       const result = await service.getContractById(1, 1);
       expect(result).toEqual(contract);
+      expect(prismaMock.contracts.findFirst).toHaveBeenCalledWith({
+        where: {
+          id: 1,
+          OR: [{ client_id: 1 }, { contractor_id: 1 }],
+        },
+        include: {
+          jobs: {
+            select: {
+              id: true,
+              description: true,
+              price: true,
+              is_paid: true,
+            },
+          },
+        },
+      });
     });
 
     it('should throw NotFoundException when an invalid id is provided', async () => {
-      prismaMock.contracts.findUnique.mockResolvedValue(null);
+      prismaMock.contracts.findFirst.mockResolvedValue(null);
       await expect(service.getContractById(0, 1)).rejects.toThrow(
-        new NotFoundException('Contract not found'),
+        new NotFoundException(
+          'Contract not found or you are not authorized to view it',
+        ),
       );
     });
 
     it('should throw ForbiddenException when the profile is not part of the contract', async () => {
       prismaMock.contracts.findUnique.mockResolvedValue(contract);
       await expect(service.getContractById(1, 2)).rejects.toThrow(
-        new ForbiddenException('You are not authorized to view this contract'),
+        new ForbiddenException(
+          'Contract not found or you are not authorized to view it',
+        ),
       );
     });
   });

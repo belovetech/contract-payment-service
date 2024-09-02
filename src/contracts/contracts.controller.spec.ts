@@ -6,7 +6,13 @@ import { contracts_status, PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prismaClient/prisma.service';
 import { EmptyLogger } from '../test-utils/empty.logger';
 import { ProfilesService } from '../profiles/profiles.service';
-import { profile, contract, listOfContracts, query, pagination } from '../test-utils';
+import {
+  profile,
+  contract,
+  listOfContracts,
+  query,
+  pagination,
+} from '../test-utils';
 import { CreateContractDto } from './dto/create-contract.dto';
 import PaginationUtil from '../utils/pagination.util';
 
@@ -40,8 +46,11 @@ describe('ContractsController', () => {
 
   describe('create contract', () => {
     it('should create a contract when valid data is provided', async () => {
-      prismaMock.profiles.findUnique.mockResolvedValue(profile);
-      prismaMock.contracts.create.mockResolvedValue(contract);
+      prismaMock.$transaction.mockImplementation(async (callback) => {
+        prismaMock.profiles.findUnique.mockResolvedValue(profile);
+        prismaMock.contracts.create.mockResolvedValue(contract);
+        return callback(prismaMock);
+      });
 
       const payload: CreateContractDto = {
         terms: 'some terms',
@@ -79,7 +88,7 @@ describe('ContractsController', () => {
 
   describe('getContractById', () => {
     it('should return a contract when a valid id is provided', async () => {
-      prismaMock.contracts.findUnique.mockResolvedValue(contract);
+      prismaMock.contracts.findFirst.mockResolvedValue(contract);
       const result = await controller.getContractById(1, { profile });
       expect(result).toEqual({
         message: 'Contract retrieved successfully',
@@ -88,7 +97,7 @@ describe('ContractsController', () => {
     });
 
     it('should throw NotFoundException when an invalid id is provided', async () => {
-      prismaMock.contracts.findUnique.mockResolvedValue(null);
+      prismaMock.contracts.findFirst.mockResolvedValue(null);
       await expect(
         controller.getContractById(0, { profile }),
       ).rejects.toThrow();
