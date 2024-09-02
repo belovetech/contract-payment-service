@@ -1,16 +1,12 @@
-import {
-  Injectable,
-  NotFoundException,
-  PreconditionFailedException,
-} from '@nestjs/common';
-import { contracts_status } from '@prisma/client';
+import { Injectable, PreconditionFailedException } from '@nestjs/common';
+import { contracts_status, profiles } from '@prisma/client';
 import { PrismaService } from '../prismaClient/prisma.service';
 import { Profile } from './entities/profile.entity';
 
 @Injectable()
 export class BalancesService {
   constructor(private prisma: PrismaService) {}
-async depositFunds(client: Profile, amount: number) {
+  async depositFunds(client: Profile, amount: number): Promise<profiles> {
     const totalOutstandingPayments =
       await this.getTotalOutstandingPaymentsValue(client.id);
 
@@ -19,6 +15,11 @@ async depositFunds(client: Profile, amount: number) {
     );
 
     if (amount > allowedDepositLimit) {
+      if (allowedDepositLimit === 0) {
+        throw new PreconditionFailedException(
+          `You have no outstanding payments to deposit funds against`,
+        );
+      }
       throw new PreconditionFailedException(
         `You cannot deposit more than ${allowedDepositLimit} at once`,
       );

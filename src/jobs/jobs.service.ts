@@ -7,13 +7,13 @@ import {
 } from '@nestjs/common';
 import { CreateJobDto } from './dto/create-job.dto';
 import { PrismaService } from '../prismaClient/prisma.service';
-import { contracts_status } from '@prisma/client';
+import { contracts_status, jobs, profiles } from '@prisma/client';
 
 @Injectable()
 export class JobsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createJobDto: CreateJobDto) {
+  async create(createJobDto: CreateJobDto): Promise<jobs> {
     const isValidContract = await this.prisma.contracts.findUnique({
       where: {
         id: createJobDto.contract_id,
@@ -24,7 +24,7 @@ export class JobsService {
       throw new NotFoundException('Contract does not exist');
     }
 
-    return this.prisma.jobs.create({
+    return await this.prisma.jobs.create({
       data: {
         ...createJobDto,
         is_paid: false,
@@ -32,7 +32,7 @@ export class JobsService {
     });
   }
 
-  async getUnpaidJobs(profile_id: number) {
+  async getUnpaidJobs(profile_id: number): Promise<jobs[]> {
     return this.prisma.jobs.findMany({
       where: {
         contract: {
@@ -51,7 +51,7 @@ export class JobsService {
     });
   }
 
-  async payForJob(job_id: number, client_id: number) {
+  async payForJob(job_id: number, client_id: number): Promise<profiles> {
     const job = await this.prisma.jobs.findUnique({
       where: {
         id: job_id,

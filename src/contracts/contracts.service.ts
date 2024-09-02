@@ -5,12 +5,12 @@ import {
 } from '@nestjs/common';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { PrismaService } from '../prismaClient/prisma.service';
-import { contracts_status } from '@prisma/client';
+import { contracts, contracts_status } from '@prisma/client';
 
 @Injectable()
 export class ContractsService {
   constructor(private prisma: PrismaService) {}
-  create(createContractDto: CreateContractDto, client_id: number) {
+  create(createContractDto: CreateContractDto, client_id: number): Promise<contracts> {
     const isValidContractor = this.prisma.profiles.findUnique({
       where: {
         id: createContractDto.contractor_id,
@@ -29,7 +29,7 @@ export class ContractsService {
     });
   }
 
-  async getContractById(id: number, profileId: number) {
+  async getContractById(id: number, profileId: number): Promise<contracts> {
     const contract = await this.prisma.contracts.findUnique({
       where: {
         id,
@@ -62,7 +62,7 @@ export class ContractsService {
     );
   }
 
-  async getContracts(profileId: number) {
+  async getContracts(profileId: number): Promise<contracts[]> {
     return this.prisma.contracts.findMany({
       where: {
         OR: [

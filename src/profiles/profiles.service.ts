@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { PrismaService } from '../prismaClient/prisma.service';
-import { profiles_role } from '@prisma/client';
+import { profiles, profiles_role } from '@prisma/client';
 
 @Injectable()
 export class ProfilesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createProfileDto: CreateProfileDto) {
+  async create(createProfileDto: CreateProfileDto): Promise<profiles> {
     const profile = await this.prisma.profiles.create({
       data: {
         ...createProfileDto,
@@ -16,7 +16,7 @@ export class ProfilesService {
     return profile;
   }
 
-  async getProfileById(id: number) {
+  async getProfileById(id: number): Promise<profiles> {
     const profile = await this.prisma.profiles.findUnique({
       where: {
         id,
@@ -30,7 +30,7 @@ export class ProfilesService {
     return profile;
   }
 
-  async getAllProfiles(role: profiles_role) {
+  async getAllProfiles(role: profiles_role): Promise<profiles[]> {
     return this.prisma.profiles.findMany({
       where: {
         role,
