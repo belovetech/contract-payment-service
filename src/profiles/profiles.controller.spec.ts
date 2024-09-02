@@ -7,7 +7,7 @@ import { ProfilesController } from './profiles.controller';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { BadRequestException } from '@nestjs/common';
 import { EmptyLogger } from '../test-utils/empty.logger';
-import { profile } from '../test-utils/data';
+import { profile } from '../test-utils/data.mock';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;

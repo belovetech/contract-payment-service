@@ -6,7 +6,7 @@ import { EmptyLogger } from '../test-utils/empty.logger';
 import { ProfilesService } from '../profiles/profiles.service';
 import { BalancesController } from './balances.controller';
 import { BalancesService } from './balances.service';
-import { profile } from '../test-utils/data';
+import { profile } from '../test-utils/data.mock';
 import { DepositDto } from './dto/deposit.dto';
 import { NotFoundException } from '@nestjs/common';
 

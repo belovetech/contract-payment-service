@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -10,10 +9,15 @@ import { CreateJobDto } from './dto/create-job.dto';
 import { PrismaService } from '../prismaClient/prisma.service';
 import { contracts_status, jobs, Prisma, profiles } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { Pagination, PaginationParam } from 'src/utils/types';
+import PaginationUtil from '../utils/pagination.util';
 
 @Injectable()
 export class JobsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private pagination: PaginationUtil,
+  ) {}
 
   async create(createJobDto: CreateJobDto): Promise<jobs> {
     const isValidContract = await this.prisma.contracts.findUnique({
@@ -34,23 +38,40 @@ export class JobsService {
     });
   }
 
-  async getUnpaidJobs(profile_id: number): Promise<jobs[]> {
-    return this.prisma.jobs.findMany({
-      where: {
-        contract: {
-          OR: [
-            {
-              client_id: profile_id,
-            },
-            {
-              contractor_id: profile_id,
-            },
-          ],
-          status: contracts_status.in_progress,
-        },
-        is_paid: false,
+  async getUnpaidJobs(
+    profile_id: number,
+    query: PaginationParam,
+  ): Promise<{ jobs: jobs[]; pagination: Pagination }> {
+    const { take, skip } = this.pagination.calculatePagination(query);
+    const whereQuery = {
+      contract: {
+        OR: [
+          {
+            client_id: profile_id,
+          },
+          {
+            contractor_id: profile_id,
+          },
+        ],
+        status: contracts_status.in_progress,
       },
-    });
+      is_paid: false,
+    };
+    const [jobs, total] = await Promise.all([
+      this.prisma.jobs.findMany({
+        where: whereQuery,
+        take,
+        skip,
+        orderBy: {
+          created_at: 'desc',
+        },
+      }),
+      this.prisma.jobs.count({
+        where: whereQuery,
+      }),
+    ]);
+    const pagination = this.pagination.getPagination(total, take, skip);
+    return { jobs, pagination };
   }
 
   async payForJob(job_id: number, client_id: number): Promise<profiles> {

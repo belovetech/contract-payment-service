@@ -7,11 +7,13 @@ import {
   UseGuards,
   Request,
   Logger,
+  Query,
 } from '@nestjs/common';
 import { ContractsService } from './contracts.service';
 import { CreateContractDto } from './dto/create-contract.dto';
-import { AuthGuard } from '../profiles/middlewares/auth';
-import { ApiHeader, ApiParam, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '../middlewares/auth';
+import { ApiHeader, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { PaginationParam } from 'src/utils/types';
 
 @Controller('contracts')
 @ApiTags('Contracts')
@@ -49,12 +51,17 @@ export class ContractsController {
   @Get()
   @UseGuards(AuthGuard)
   @ApiHeader({ name: 'profile_id', required: true })
-  async getContracts(@Request() { profile }) {
+  @ApiQuery({ name: 'page_size', required: false })
+  @ApiQuery({ name: 'page', required: false })
+  async getContracts(@Request() { profile }, @Query() query: PaginationParam) {
     try {
       this.logger.log('Start: Retrieving contracts');
-      const contracts = await this.contractsService.getContracts(profile.id);
+      const contracts = await this.contractsService.getContracts(
+        profile.id,
+        query,
+      );
       this.logger.log('End: Contracts retrieved', {
-        count: contracts.length,
+        count: contracts.contracts.length,
         profile_id: profile.id,
       });
       return {

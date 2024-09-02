@@ -4,20 +4,22 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prismaClient/prisma.service';
 import { JobsService } from './jobs.service';
 import { ProfilesService } from '../profiles/profiles.service';
-import { contract, job, profile, unpaidJobs } from '../test-utils/data';
+import { contract, job, profile, unpaidJobs } from '../test-utils/data.mock';
 import {
   ForbiddenException,
   NotFoundException,
   PreconditionFailedException,
 } from '@nestjs/common';
 import { CreateJobDto } from './dto/create-job.dto';
+import { query } from '../test-utils';
+import PaginationUtil from '../utils/pagination.util';
 
 describe('JobsService', () => {
   let service: JobsService;
   let prismaMock: DeepMockProxy<PrismaClient>;
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [JobsService, ProfilesService, PrismaService],
+      providers: [JobsService, ProfilesService, PrismaService, PaginationUtil],
     })
       .overrideProvider(PrismaService)
       .useValue(mockDeep<PrismaClient>())
@@ -59,14 +61,16 @@ describe('JobsService', () => {
   describe('GetUnpaidJobs', () => {
     it('should return a list of unpaid jobs', async () => {
       prismaMock.jobs.findMany.mockResolvedValue(unpaidJobs);
-      const result = await service.getUnpaidJobs(1);
-      expect(result).toEqual(unpaidJobs);
+      prismaMock.jobs.count.mockResolvedValue(10);
+      const result = await service.getUnpaidJobs(1, query);
+      expect(result.jobs).toEqual(unpaidJobs);
     });
 
     it("should empty list when there's no unpaid jobs", async () => {
       prismaMock.jobs.findMany.mockResolvedValue([]);
-      const result = await service.getUnpaidJobs(1);
-      expect(result).toEqual([]);
+      prismaMock.jobs.count.mockResolvedValue(10);
+      const result = await service.getUnpaidJobs(1, query);
+      expect(result.jobs).toEqual([]);
     });
   });
 

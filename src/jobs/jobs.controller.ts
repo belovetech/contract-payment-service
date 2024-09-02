@@ -8,11 +8,13 @@ import {
   Param,
   Logger,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
-import { AuthGuard } from '../profiles/middlewares/auth';
-import { ApiHeader, ApiParam, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '../middlewares/auth';
+import { ApiHeader, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { PaginationParam } from 'src/utils/types';
 
 @Controller('jobs')
 @ApiTags('Jobs')
@@ -41,11 +43,13 @@ export class JobsController {
 
   @UseGuards(AuthGuard)
   @ApiHeader({ name: 'profile_id', required: true })
+  @ApiQuery({ name: 'page_size', required: false })
+  @ApiQuery({ name: 'page', required: false })
   @Get('unpaid')
-  async getUnpaidJobs(@Request() { profile }) {
+  async getUnpaidJobs(@Request() { profile }, @Query() query: PaginationParam) {
     try {
       this.logger.log('Start: Retrieving unpaid jobs');
-      const jobs = await this.jobsService.getUnpaidJobs(profile.id);
+      const jobs = await this.jobsService.getUnpaidJobs(profile.id, query);
       this.logger.log('End: unpaid jobs retrieved');
       return {
         message: 'Unpaid jobs retrieved successfully',

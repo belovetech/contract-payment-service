@@ -1,17 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prismaClient/prisma.service';
 import { EmptyLogger } from '../test-utils/empty.logger';
 import { ProfilesService } from '../profiles/profiles.service';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
-import { contract, job, profile } from '../test-utils/data';
-import {
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { contract, job, query } from '../test-utils';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import PaginationUtil from '../utils/pagination.util';
 
 describe('JobsController', () => {
   let controller: JobsController;
@@ -20,7 +17,7 @@ describe('JobsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [JobsController],
-      providers: [JobsService, ProfilesService, PrismaService],
+      providers: [JobsService, ProfilesService, PrismaService, PaginationUtil],
     })
       .overrideProvider(PrismaService)
       .useValue(mockDeep<PrismaClient>())
@@ -69,14 +66,16 @@ describe('JobsController', () => {
   describe('GetUnpaidJobs', () => {
     it('should return unpaid jobs', async () => {
       prismaMock.jobs.findMany.mockResolvedValue([job]);
-      const result = await controller.getUnpaidJobs({ profile: 1 });
-      expect(result.data).toEqual([job]);
+      prismaMock.jobs.count.mockResolvedValue(10);
+      const result = await controller.getUnpaidJobs({ profile: 1 }, query);
+      expect(result.data.jobs).toEqual([job]);
     });
 
     it('should get an empty array when there are no unpaid jobs', async () => {
       prismaMock.jobs.findMany.mockResolvedValue([]);
-      const result = await controller.getUnpaidJobs({ profile: 1 });
-      expect(result.data).toEqual([]);
+      prismaMock.jobs.count.mockResolvedValue(10);
+      const result = await controller.getUnpaidJobs({ profile: 1 }, query);
+      expect(result.data.jobs).toEqual([]);
     });
   });
 

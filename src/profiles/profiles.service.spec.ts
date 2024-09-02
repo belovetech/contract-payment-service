@@ -4,7 +4,7 @@ import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import { PrismaService } from '../prismaClient/prisma.service';
 import { ProfilesService } from './profiles.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
-import { profile } from '../test-utils/data';
+import { profile } from '../test-utils/data.mock';
 
 describe('profileService', () => {
   let service: ProfilesService;

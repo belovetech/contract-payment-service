@@ -3,7 +3,7 @@ import { BalancesService } from './balances.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prismaClient/prisma.service';
-import { profile } from '../test-utils/data';
+import { profile } from '../test-utils/data.mock';
 
 describe('BalancesService', () => {
   let service: BalancesService;

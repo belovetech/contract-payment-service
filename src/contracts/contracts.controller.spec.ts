@@ -6,8 +6,9 @@ import { contracts_status, PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prismaClient/prisma.service';
 import { EmptyLogger } from '../test-utils/empty.logger';
 import { ProfilesService } from '../profiles/profiles.service';
-import { profile, contract, listOfContracts } from '../test-utils/data';
+import { profile, contract, listOfContracts, query, pagination } from '../test-utils';
 import { CreateContractDto } from './dto/create-contract.dto';
+import PaginationUtil from '../utils/pagination.util';
 
 describe('ContractsController', () => {
   let controller: ContractsController;
@@ -16,7 +17,12 @@ describe('ContractsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ContractsController],
-      providers: [ContractsService, ProfilesService, PrismaService],
+      providers: [
+        ContractsService,
+        ProfilesService,
+        PrismaService,
+        PaginationUtil,
+      ],
     })
       .overrideProvider(PrismaService)
       .useValue(mockDeep<PrismaClient>())
@@ -99,15 +105,15 @@ describe('ContractsController', () => {
   describe('getContracts', () => {
     it('should return contracts when a valid profile id is provided', async () => {
       prismaMock.contracts.findMany.mockResolvedValue(listOfContracts);
-      const result = await controller.getContracts({ profile });
-      expect(result).toEqual({
-        message: 'Contracts retrieved successfully',
-        data: listOfContracts,
-      });
+      prismaMock.contracts.count.mockResolvedValue(10);
+      const result = await controller.getContracts({ profile }, query);
+      expect(result.data.contracts).toEqual(listOfContracts);
     });
 
     it('should throw UnauthorizedException when the profile id is not included in the header', async () => {
-      await expect(controller.getContracts({ profile: null })).rejects.toThrow();
+      await expect(
+        controller.getContracts({ profile: null }, query),
+      ).rejects.toThrow();
     });
-  })
+  });
 });

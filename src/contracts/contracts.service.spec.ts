@@ -1,10 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ContractsService } from './contracts.service';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { contracts_status, PrismaClient } from '@prisma/client';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
+import { ContractsService } from './contracts.service';
 import { PrismaService } from '../prismaClient/prisma.service';
-import { profile, contract, listOfContracts } from '../test-utils/data';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  profile,
+  contract,
+  listOfContracts,
+  query,
+  pagination,
+} from '../test-utils';
+import PaginationUtil from '../utils/pagination.util';
+import e from 'express';
 
 describe('ContractsService', () => {
   let service: ContractsService;
@@ -12,7 +20,7 @@ describe('ContractsService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ContractsService, PrismaService],
+      providers: [ContractsService, PrismaService, PaginationUtil],
     })
       .overrideProvider(PrismaService)
       .useValue(mockDeep<PrismaClient>())
@@ -91,26 +99,37 @@ describe('ContractsService', () => {
   describe('getContracts', () => {
     it('should return contracts when a valid profile ID is provided', async () => {
       prismaMock.contracts.findMany.mockResolvedValue([contract]);
-      const result = await service.getContracts(1);
-      expect(result).toEqual([contract]);
+      const result = await service.getContracts(1, query);
+      expect(result.contracts).toEqual([contract]);
     });
 
     it('should return an empty array when an invalid profile ID is provided', async () => {
       prismaMock.contracts.findMany.mockResolvedValue([]);
-      const result = await service.getContracts(1);
-      expect(result).toEqual([]);
+      const result = await service.getContracts(1, query);
+      expect(result.contracts).toEqual([]);
     });
 
     it('should return an empty array when an invalid profile ID is provided', async () => {
       prismaMock.contracts.findMany.mockResolvedValue([]);
-      const result = await service.getContracts(1);
-      expect(result).toEqual([]);
+      const result = await service.getContracts(1, query);
+      expect(result.contracts).toEqual([]);
     });
 
     it('it should not return any terminated contracts', async () => {
       prismaMock.contracts.findMany.mockResolvedValue(listOfContracts);
-      const result = await service.getContracts(1);
-      expect(result).toEqual(listOfContracts);
+      const result = await service.getContracts(1, query);
+      expect(result.contracts).toEqual(listOfContracts);
+    });
+
+    it('should test pagination', async () => {
+      prismaMock.contracts.findMany.mockResolvedValue(listOfContracts);
+      prismaMock.contracts.count.mockResolvedValue(10);
+      const result = await service.getContracts(1, query);
+      expect(result.contracts).toEqual(listOfContracts);
+      expect(result.pagination).toHaveProperty('total_items', 10);
+      expect(result.pagination).toHaveProperty('total_page', 5);
+      expect(result.pagination).toHaveProperty('current_page', 1);
+      expect(result.pagination).toHaveProperty('page_size', 2);
     });
   });
 });

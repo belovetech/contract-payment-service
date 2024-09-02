@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ProfilesService } from './profiles.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
-import { AuthGuard } from './middlewares/auth';
+import { AuthGuard } from '../middlewares/auth';
 import { GetProfilesDto } from './dto/get-profiles.dto';
 import {
   ApiBearerAuth,
