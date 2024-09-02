@@ -32,7 +32,6 @@ services:
       - '5433:5432'
     volumes:
       - db_data_test:/var/lib/postgresql/data/
-      # - ./postgres/init_test.sql:/docker-entrypoint-initdb.d/init.sql
 
   redis_test:
     image: redis:7-alpine
