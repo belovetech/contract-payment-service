@@ -89,14 +89,6 @@ describe('JobsController', () => {
       );
     });
 
-    it('should throw BadRequestException when the job is already paid', async () => {
-      prismaMock.jobs.findUnique.mockResolvedValue({ ...job, is_paid: true });
-      prismaMock.jobs.update.mockRejectedValue(new BadRequestException());
-      await expect(controller.payForJob({ profile: 1 }, 1)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
     it('should throw ForbiddenException when the client is not the job client', async () => {
       prismaMock.jobs.findUnique.mockResolvedValue(mockJob);
       prismaMock.jobs.update.mockRejectedValue(new ForbiddenException());

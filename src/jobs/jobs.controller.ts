@@ -8,13 +8,11 @@ import {
   Param,
   Logger,
   ParseIntPipe,
-  BadRequestException,
 } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { AuthGuard } from '../profiles/middlewares/auth';
 import { ApiHeader, ApiParam, ApiTags } from '@nestjs/swagger';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Controller('jobs')
 @ApiTags('Jobs')

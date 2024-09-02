@@ -12,21 +12,21 @@ export const clients: Profile[] = [
   {
     first_name: 'John',
     last_name: 'Doe',
-    profession: 'Software Engineer',
+    profession: 'Client_1',
     balance: 0,
     role: 'client',
   },
   {
     first_name: 'Jane',
     last_name: 'Doe',
-    profession: 'Data Scientist',
+    profession: 'Client_2',
     balance: 0,
     role: 'client',
   },
   {
     first_name: 'Alice',
     last_name: 'Doe',
-    profession: 'Product Manager',
+    profession: 'Client_2',
     balance: 0,
     role: 'client',
   },
@@ -40,13 +40,7 @@ export const contractors: Profile[] = [
     balance: 0,
     role: 'contractor',
   },
-  {
-    first_name: 'Charlie',
-    last_name: 'Doe',
-    profession: 'Software Engineer',
-    balance: 0,
-    role: 'contractor',
-  },
+
   {
     first_name: 'David',
     last_name: 'Doe',
@@ -58,6 +52,13 @@ export const contractors: Profile[] = [
     first_name: 'Eve',
     last_name: 'Doe',
     profession: 'Graphic Designer',
+    balance: 0,
+    role: 'contractor',
+  },
+  {
+    first_name: 'Charlie',
+    last_name: 'Doe',
+    profession: 'Software Engineer',
     balance: 0,
     role: 'contractor',
   },

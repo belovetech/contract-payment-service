@@ -32,9 +32,7 @@ describe('AdminController', () => {
 
   describe('GetBestProfession', () => {
     it('should return the best profession when given a valid date range', async () => {
-      prismaMock.$queryRaw.mockResolvedValue([
-        { profession: 'Engineer', total_earnings: 1000 },
-      ]);
+      prismaMock.$queryRaw.mockResolvedValue([{ profession: 'Engineer' }]);
 
       const result = await controller.getBestProfession(
         '2023-01-01',
@@ -43,7 +41,7 @@ describe('AdminController', () => {
 
       expect(result).toEqual({
         message: 'Best profession retrieved successfully',
-        data: { profession: 'Engineer', total_earnings: 1000 },
+        data: 'Engineer',
       });
     });
 

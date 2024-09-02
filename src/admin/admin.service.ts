@@ -7,10 +7,7 @@ import { BestClients } from './entities/best.clients';
 export class AdminService {
   constructor(private prisma: PrismaService) {}
 
-  async getBestProfession(
-    start: string,
-    end: string,
-  ): Promise<BestProfession | null> {
+  async getBestProfession(start: string, end: string): Promise<string | null> {
     const { startDate, endDate } = this.validateDate(start, end);
     const result = await this.prisma.$queryRaw`
       SELECT p.profession, SUM(j.price) as total_earnings
@@ -20,10 +17,10 @@ export class AdminService {
       WHERE p.role = 'contractor' AND j.is_paid = TRUE AND j.paid_date BETWEEN ${startDate} AND ${endDate}
       GROUP BY profession
       ORDER BY total_earnings DESC
-      LIMIT 2
+      LIMIT 1;
     `;
-    const bestProfession = result as BestProfession[];
-    return bestProfession[0] || {};
+    const bestProfession = result as BestProfession;
+    return bestProfession[0].profession || null;
   }
 
   async getBestClients(

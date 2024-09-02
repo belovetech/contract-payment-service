@@ -52,16 +52,13 @@ describe('AdminService', () => {
 
   describe('Best Professions', () => {
     it('should return the best profession when given a valid date range', async () => {
-      prismaMock.$queryRaw.mockResolvedValue([
-        { profession: 'Engineer', total_earnings: 1000 },
-      ]);
+      prismaMock.$queryRaw.mockResolvedValue([{ profession: 'Engineer' }]);
 
-      const result = await service.getBestProfession(
+      const profession = await service.getBestProfession(
         '2023-01-01',
         '2023-12-31',
       );
-      expect(result?.profession).toEqual('Engineer');
-      expect(result?.total_earnings).toEqual(1000);
+      expect(profession).toEqual('Engineer');
     });
 
     it('should throw BadRequestException when start date is later than end date', async () => {
