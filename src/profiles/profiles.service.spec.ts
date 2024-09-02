@@ -4,7 +4,7 @@ import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import { PrismaService } from '../prismaClient/prisma.service';
 import { ProfilesService } from './profiles.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
-import { profile } from '../test-utils/data.mock';
+import { mockProfile } from '../test-utils';
 
 describe('profileService', () => {
   let service: ProfilesService;
@@ -31,8 +31,8 @@ describe('profileService', () => {
         role: profiles_role.client,
       };
 
-      prismaMock.profiles.create.mockResolvedValue(profile);
-      await expect(service.create(payload)).resolves.toEqual(profile);
+      prismaMock.profiles.create.mockResolvedValue(mockProfile);
+      await expect(service.create(payload)).resolves.toEqual(mockProfile);
     });
 
     it('should throw an error when invalid data is provided', async () => {
@@ -48,12 +48,12 @@ describe('profileService', () => {
   });
   describe('getProfileById', () => {
     it('should return a profile when a valid id is provided', async () => {
-      prismaMock.profiles.findUnique.mockResolvedValue(profile);
+      prismaMock.profiles.findUnique.mockResolvedValue(mockProfile);
       const result = await service.getProfileById(10);
-      expect(result.first_name).toEqual(profile.first_name);
-      expect(result.last_name).toEqual(profile.last_name);
-      expect(result.profession).toEqual(profile.profession);
-      expect(result.role).toEqual(profile.role);
+      expect(result.first_name).toEqual(mockProfile.first_name);
+      expect(result.last_name).toEqual(mockProfile.last_name);
+      expect(result.profession).toEqual(mockProfile.profession);
+      expect(result.role).toEqual(mockProfile.role);
     });
 
     it('should throw an error when an invalid id is provided', async () => {
@@ -64,9 +64,9 @@ describe('profileService', () => {
 
   describe('getAllProfiles', () => {
     it('should return all profiles when a valid role is provided', async () => {
-      prismaMock.profiles.findMany.mockResolvedValue([profile]);
+      prismaMock.profiles.findMany.mockResolvedValue([mockProfile]);
       const result = await service.getAllProfiles(profiles_role.client);
-      expect(result).toEqual([profile]);
+      expect(result).toEqual([mockProfile]);
     });
 
     it('should return an empty array when an invalid role is provided', async () => {

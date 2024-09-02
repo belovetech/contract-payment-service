@@ -7,7 +7,7 @@ import {
   profiles_role,
 } from '@prisma/client';
 
-export const profile: profiles = {
+export const mockProfile: profiles = {
   first_name: 'John',
   last_name: 'Doe',
   profession: 'Software Engineer',
@@ -19,7 +19,32 @@ export const profile: profiles = {
   balance: new Prisma.Decimal(0),
 };
 
-export const contract: contracts = {
+export const mockProfiles: profiles[] = [
+  {
+    first_name: 'John',
+    last_name: 'Doe',
+    profession: 'Software Engineer',
+    role: profiles_role.client,
+    uuid: '123',
+    id: 1,
+    created_at: new Date(),
+    updated_at: new Date(),
+    balance: new Prisma.Decimal(0),
+  },
+  {
+    first_name: 'Jane',
+    last_name: 'Doe',
+    profession: 'Software Engineer',
+    role: profiles_role.contractor,
+    uuid: '123',
+    id: 2,
+    created_at: new Date(),
+    updated_at: new Date(),
+    balance: new Prisma.Decimal(0),
+  },
+];
+
+export const mockContract: contracts = {
   id: 1,
   client_id: 1,
   contractor_id: 1,
@@ -30,7 +55,7 @@ export const contract: contracts = {
   uuid: '123',
 };
 
-export const listOfContracts: contracts[] = [
+export const mockContracts: contracts[] = [
   {
     id: 1,
     client_id: 1,
@@ -63,7 +88,7 @@ export const listOfContracts: contracts[] = [
   },
 ];
 
-export const job: jobs = {
+export const mockJob: jobs = {
   id: 1,
   description: 'Test Description',
   price: new Prisma.Decimal(100),
@@ -75,7 +100,7 @@ export const job: jobs = {
   updated_at: new Date(),
 };
 
-export const unpaidJobs: jobs[] = [
+export const mockUnpaidJobs: jobs[] = [
   {
     id: 1,
     description: 'Test Description',
@@ -100,8 +125,8 @@ export const unpaidJobs: jobs[] = [
   },
 ];
 
-export const listOfJobs: jobs[] = [
-  ...unpaidJobs,
+export const mockJobs: jobs[] = [
+  ...mockUnpaidJobs,
   {
     id: 3,
     description: 'Test Description',

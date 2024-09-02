@@ -6,7 +6,7 @@ import { EmptyLogger } from '../test-utils/empty.logger';
 import { ProfilesService } from '../profiles/profiles.service';
 import { BalancesController } from './balances.controller';
 import { BalancesService } from './balances.service';
-import { profile } from '../test-utils/data.mock';
+import { mockProfile } from '../test-utils/data.mock';
 import { DepositDto } from './dto/deposit.dto';
 import { NotFoundException } from '@nestjs/common';
 
@@ -36,9 +36,9 @@ describe('BalancesController', () => {
   describe('DepositFunds', () => {
     it('should deposit funds', async () => {
       const total = new Prisma.Decimal(300);
-      prismaMock.profiles.findFirst.mockResolvedValue(profile);
+      prismaMock.profiles.findFirst.mockResolvedValue(mockProfile);
       prismaMock.profiles.update.mockResolvedValue({
-        ...profile,
+        ...mockProfile,
         balance: total,
       });
       prismaMock.jobs.aggregate.mockResolvedValue({
@@ -47,7 +47,11 @@ describe('BalancesController', () => {
 
       const user_id = 1;
       const dto: DepositDto = { amount: 75 };
-      const result = await controller.depositFunds({ profile }, dto, user_id);
+      const result = await controller.depositFunds(
+        { profile: mockProfile },
+        dto,
+        user_id,
+      );
       expect(result.data.balance).toEqual(total);
     });
 
@@ -60,7 +64,7 @@ describe('BalancesController', () => {
       } as any);
 
       await expect(
-        controller.depositFunds({ profile }, { amount: 0 }, 1),
+        controller.depositFunds({ profile: mockProfile }, { amount: 0 }, 1),
       ).rejects.toThrow(NotFoundException);
     });
   });

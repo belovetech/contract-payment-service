@@ -19,22 +19,22 @@ export class JobsService {
     private pagination: PaginationUtil,
   ) {}
 
-  async create(createJobDto: CreateJobDto): Promise<jobs> {
-    const isValidContract = await this.prisma.contracts.findUnique({
-      where: {
-        id: createJobDto.contract_id,
-      },
-    });
+  async createJob(createJobDto: CreateJobDto): Promise<jobs> {
+    return this.prisma.$transaction(async (trx) => {
+      const isValidContract = await trx.contracts.findUnique({
+        where: { id: createJobDto.contract_id },
+      });
 
-    if (!isValidContract) {
-      throw new NotFoundException('Contract does not exist');
-    }
+      if (!isValidContract) {
+        throw new NotFoundException('Contract does not exist');
+      }
 
-    return await this.prisma.jobs.create({
-      data: {
-        ...createJobDto,
-        is_paid: false,
-      },
+      return trx.jobs.create({
+        data: {
+          ...createJobDto,
+          is_paid: false,
+        },
+      });
     });
   }
 

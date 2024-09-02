@@ -26,7 +26,7 @@ export class JobsController {
   async create(@Body() createJobDto: CreateJobDto) {
     this.logger.log('Start: Creating job');
     try {
-      const job = await this.jobsService.create(createJobDto);
+      const job = await this.jobsService.createJob(createJobDto);
       this.logger.log('End: Creating job');
       return {
         message: 'Job created successfully',

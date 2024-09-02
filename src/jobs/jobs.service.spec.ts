@@ -4,7 +4,12 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prismaClient/prisma.service';
 import { JobsService } from './jobs.service';
 import { ProfilesService } from '../profiles/profiles.service';
-import { contract, job, profile, unpaidJobs } from '../test-utils/data.mock';
+import {
+  mockContract as contract,
+  mockJob as job,
+  mockProfile as profile,
+  mockUnpaidJobs as unpaidJobs,
+} from '../test-utils/data.mock';
 import {
   ForbiddenException,
   NotFoundException,
@@ -34,26 +39,66 @@ describe('JobsService', () => {
   });
 
   describe('CreateJob', () => {
-    it('should create a job', async () => {
-      prismaMock.contracts.findUnique.mockResolvedValue(contract);
-      prismaMock.jobs.create.mockResolvedValue(job);
-      const result = await service.create({ ...job, price: 1000 });
+    // it('should create a job', async () => {
+    //   prismaMock.contracts.findUnique.mockResolvedValue(contract);
+    //   prismaMock.jobs.create.mockResolvedValue(job);
+    //   const result = await service.createJob({ ...job, price: 1000 });
+    //   expect(result).toEqual(job);
+    // });
+    it('should create a job if the contract exists', async () => {
+      const createJobDto = {
+        contract_id: 1,
+        description: 'Test Job',
+        price: 1000,
+      };
+      prismaMock.$transaction.mockImplementation(async (callback) => {
+        prismaMock.contracts.findUnique.mockResolvedValue(contract);
+        prismaMock.jobs.create.mockResolvedValue(job);
+        return callback(prismaMock);
+      });
+
+      const result = await service.createJob(createJobDto);
       expect(result).toEqual(job);
+      expect(prismaMock.contracts.findUnique).toHaveBeenCalledWith({
+        where: { id: createJobDto.contract_id },
+      });
+      expect(prismaMock.jobs.create).toHaveBeenCalledWith({
+        data: {
+          ...createJobDto,
+          is_paid: false,
+        },
+      });
     });
 
-    it("should thow NotFoundException when contract doesn't exist", async () => {
-      prismaMock.contracts.findUnique.mockResolvedValue(null);
-      const createJobDto: CreateJobDto = { ...job, price: 1000 };
-      prismaMock.jobs.create.mockRejectedValue(new NotFoundException());
-      await expect(service.create(createJobDto)).rejects.toThrow(
-        NotFoundException,
+    it('should throw NotFoundException if the contract does not exist', async () => {
+      const createJobDto = {
+        contract_id: 1,
+        description: 'Test Job',
+        price: 1000,
+      };
+
+      prismaMock.$transaction.mockImplementation(async (callback) => {
+        prismaMock.contracts.findUnique.mockResolvedValue(null);
+        return callback(prismaMock);
+      });
+
+      await expect(service.createJob(createJobDto)).rejects.toThrow(
+        new NotFoundException('Contract does not exist'),
       );
+
+      expect(prismaMock.contracts.findUnique).toHaveBeenCalledWith({
+        where: { id: createJobDto.contract_id },
+      });
+      expect(prismaMock.jobs.create).not.toHaveBeenCalled();
     });
 
     it('is_paid should be false when creating a job', async () => {
-      prismaMock.contracts.findUnique.mockResolvedValue(contract);
-      prismaMock.jobs.create.mockResolvedValue(job);
-      const result = await service.create({ ...job, price: 1000 });
+      prismaMock.$transaction.mockImplementation(async (callback) => {
+        prismaMock.contracts.findUnique.mockResolvedValue(contract);
+        prismaMock.jobs.create.mockResolvedValue(job);
+        return callback(prismaMock);
+      });
+      const result = await service.createJob({ ...job, price: 1000 });
       expect(result.is_paid).toBe(false);
     });
   });

@@ -5,9 +5,9 @@ import { PrismaService } from '../prismaClient/prisma.service';
 import { ProfilesService } from './profiles.service';
 import { ProfilesController } from './profiles.controller';
 import { CreateProfileDto } from './dto/create-profile.dto';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { EmptyLogger } from '../test-utils/empty.logger';
-import { profile } from '../test-utils/data.mock';
+import { mockProfile, mockProfiles } from '../test-utils';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;
@@ -40,10 +40,10 @@ describe('ProfilesController', () => {
       role: 'client',
     };
 
-    prismaMock.profiles.create.mockResolvedValue(profile);
+    prismaMock.profiles.create.mockResolvedValue(mockProfile);
     await expect(controller.create(payload)).resolves.toEqual({
       message: 'Profile created successfully',
-      data: profile,
+      data: mockProfile,
     });
   });
 
@@ -61,9 +61,9 @@ describe('ProfilesController', () => {
   describe('getAllProfiles', () => {
     it('should return profiles when a valid role is provided', async () => {
       const role = 'client';
-      prismaMock.profiles.findMany.mockResolvedValue([profile]);
+      prismaMock.profiles.findMany.mockResolvedValue(mockProfiles);
       const result = await controller.getAllProfiles({ role });
-      expect(result.data).toEqual([profile]);
+      expect(result.data).toEqual(mockProfiles);
     });
 
     it('should throw bad request error when invalid role is provided', async () => {
@@ -75,15 +75,8 @@ describe('ProfilesController', () => {
 
   describe('getProfile', () => {
     it('should return a profile when a valid id is provided', async () => {
-      const result = await controller.getProfile({ profile });
-      expect(result.data).toEqual(profile);
+      const result = await controller.getProfile({ profile: mockProfile });
+      expect(result.data).toEqual(mockProfile);
     });
-
-    // it('should throw unauthorized error if profile id is not included in the header', async () => {
-    //   prismaMock.profiles.findUnique.mockRejectedValue(
-    //     new UnauthorizedException(),
-    //   );
-    //   await expect(controller.getProfile({ profile: null })).rejects.toThrow();
-    // });
   });
 });
