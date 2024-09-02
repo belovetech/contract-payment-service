@@ -20,7 +20,7 @@ export class AdminService {
       WHERE p.role = 'contractor' AND j.is_paid = TRUE AND j.paid_date BETWEEN ${startDate} AND ${endDate}
       GROUP BY profession
       ORDER BY total_earnings DESC
-      LIMIT 1
+      LIMIT 2
     `;
     const bestProfession = result as BestProfession[];
     return bestProfession[0] || {};

@@ -8,11 +8,13 @@ import {
   Param,
   Logger,
   ParseIntPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { AuthGuard } from '../profiles/middlewares/auth';
-import { ApiBody, ApiHeader, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiHeader, ApiParam, ApiTags } from '@nestjs/swagger';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Controller('jobs')
 @ApiTags('Jobs')
@@ -73,7 +75,6 @@ export class JobsController {
         job_id,
         profile.id,
       );
-
       return {
         message: 'Job paid successfully',
         data: clientProfile,

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -7,7 +8,8 @@ import {
 } from '@nestjs/common';
 import { CreateJobDto } from './dto/create-job.dto';
 import { PrismaService } from '../prismaClient/prisma.service';
-import { contracts_status, jobs, profiles } from '@prisma/client';
+import { contracts_status, jobs, Prisma, profiles } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class JobsService {
@@ -55,6 +57,7 @@ export class JobsService {
     const job = await this.prisma.jobs.findUnique({
       where: {
         id: job_id,
+        is_paid: false,
       },
       include: {
         contract: {
@@ -67,7 +70,7 @@ export class JobsService {
     });
 
     if (!job) {
-      throw new NotFoundException('Job not found');
+      throw new NotFoundException('Job not found or already paid for');
     }
 
     if (job.contract?.client_id !== client_id) {
@@ -76,28 +79,7 @@ export class JobsService {
       );
     }
 
-    if (job.is_paid) {
-      throw new BadRequestException('Job has already been paid for');
-    }
-
     return this.prisma.$transaction(async (trx) => {
-      const client = await trx.profiles.findUnique({
-        where: {
-          id: client_id,
-        },
-        select: {
-          balance: true,
-        },
-      });
-
-      if (!client) {
-        throw new NotFoundException('Client not found');
-      }
-
-      if (job.price > client.balance) {
-        throw new PreconditionFailedException('Insufficient balance');
-      }
-
       const updatedClient = await trx.profiles.update({
         where: {
           id: client_id,
@@ -108,6 +90,10 @@ export class JobsService {
           },
         },
       });
+
+      if (updatedClient.balance < new Prisma.Decimal(0)) {
+        throw new PreconditionFailedException('Insufficient balance');
+      }
 
       await trx.profiles.update({
         where: {
@@ -120,48 +106,28 @@ export class JobsService {
         },
       });
 
-      await trx.jobs.update({
-        where: {
-          id: job_id,
-        },
-        data: {
-          is_paid: true,
-          paid_date: new Date(),
-        },
-      });
-
+      try {
+        await trx.jobs.update({
+          where: {
+            id: job_id,
+            is_paid: false,
+            updated_at: job.updated_at,
+          },
+          data: {
+            is_paid: true,
+            paid_date: new Date(),
+          },
+        });
+      } catch (error) {
+        if (
+          error instanceof PrismaClientKnownRequestError &&
+          error.code === 'P2025'
+        ) {
+          throw new BadRequestException('Job has already been paid for');
+        }
+        throw error;
+      }
       return updatedClient;
     });
   }
 }
-//TODO! Implement idempotency
-/**
- * Check if job exists
- * check the client's balance
- * create a transaction
- * decrement the client's balance
- * increment the contractor's balance
- * mark the job as paid
- * commit the transaction
- *
- * Question1:
- *  do we check balance inside or outside the transaction?
- * Answer1:
- *  Inside the transaction
- *
- * Question2:
- *  What happesn if check the client's balance inside the transaction without locking the row?
- * Answer2:
- *  The client's balance can change between the time we check the balance and the time we decrement the balance
- *
- * Solution:
- *  Select the client's balance for a write operation with a lock
- *  check if the client has enough balance
- *     if not, rollback the transaction
- *     if yes, decrement the client's balance
- *     increment the contractor's balance
- *     mark the job as paid
- *     commit the transaction
- *
- *
- */
