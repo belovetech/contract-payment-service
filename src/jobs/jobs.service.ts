@@ -45,14 +45,7 @@ export class JobsService {
     const { take, skip } = this.pagination.calculatePagination(query);
     const whereQuery = {
       contract: {
-        OR: [
-          {
-            client_id: profile_id,
-          },
-          {
-            contractor_id: profile_id,
-          },
-        ],
+        OR: [{ client_id: profile_id }, { contractor_id: profile_id }],
         status: contracts_status.in_progress,
       },
       is_paid: false,
@@ -75,36 +68,34 @@ export class JobsService {
   }
 
   async payForJob(job_id: number, client_id: number): Promise<profiles> {
-    const job = await this.prisma.jobs.findUnique({
-      where: {
-        id: job_id,
-        is_paid: false,
-      },
-      include: {
-        contract: {
-          select: {
-            client_id: true,
-            contractor_id: true,
+    return this.prisma.$transaction(async (trx) => {
+      const job = await trx.jobs.findUnique({
+        where: {
+          id: job_id,
+          is_paid: false,
+        },
+        include: {
+          contract: {
+            select: {
+              client_id: true,
+              contractor_id: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    if (!job) {
-      throw new NotFoundException('Job not found or already paid for');
-    }
+      if (!job) {
+        throw new NotFoundException('Job not found or already paid for');
+      }
 
-    if (job.contract?.client_id !== client_id) {
-      throw new ForbiddenException(
-        'You are not authorized to pay for this job',
-      );
-    }
+      if (job.contract.client_id !== client_id) {
+        throw new ForbiddenException(
+          'You are not authorized to pay for this job',
+        );
+      }
 
-    return this.prisma.$transaction(async (trx) => {
       const updatedClient = await trx.profiles.update({
-        where: {
-          id: client_id,
-        },
+        where: { id: client_id },
         data: {
           balance: {
             decrement: job.price,
@@ -117,9 +108,7 @@ export class JobsService {
       }
 
       await trx.profiles.update({
-        where: {
-          id: job.contract.contractor_id,
-        },
+        where: { id: job.contract.contractor_id },
         data: {
           balance: {
             increment: job.price,
@@ -148,6 +137,7 @@ export class JobsService {
         }
         throw error;
       }
+
       return updatedClient;
     });
   }

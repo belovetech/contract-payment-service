@@ -85,8 +85,10 @@ describe('JobsController', () => {
 
   describe('PayForJob', () => {
     it('should throw NotFoundException when the job does not exist', async () => {
-      prismaMock.jobs.findUnique.mockResolvedValue(null);
-      prismaMock.jobs.update.mockRejectedValue(new NotFoundException());
+      prismaMock.$transaction.mockImplementation(async (callback) => {
+        prismaMock.jobs.findUnique.mockRejectedValue(new NotFoundException());
+        return callback(prismaMock);
+      });
       await expect(controller.payForJob({ profile: 1 }, 1)).rejects.toThrow(
         NotFoundException,
       );
@@ -95,7 +97,7 @@ describe('JobsController', () => {
     it('should throw ForbiddenException when the client is not the job client', async () => {
       prismaMock.$transaction.mockImplementation(async (callback) => {
         prismaMock.jobs.findUnique.mockResolvedValue(mockJob);
-        prismaMock.jobs.findUnique.mockRejectedValue(NotFoundException);
+        prismaMock.jobs.findUnique.mockRejectedValue(new NotFoundException());
         return callback(prismaMock);
       });
       await expect(controller.payForJob({ profile: 1 }, 2)).rejects.toThrow(

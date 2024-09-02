@@ -7,6 +7,7 @@ import { ProfilesService } from '../profiles/profiles.service';
 import {
   mockContract as contract,
   mockJob as job,
+  mockProfile,
   mockProfile as profile,
   mockUnpaidJobs as unpaidJobs,
 } from '../test-utils/data.mock';
@@ -120,9 +121,18 @@ describe('JobsService', () => {
   });
 
   describe('PayForJob', () => {
-    it('should throw NotFoundException if the job is not found or already paid for', async () => {
-      prismaMock.jobs.findUnique.mockResolvedValue(null);
-      await expect(service.payForJob(1, 1)).rejects.toThrow(NotFoundException);
+    it('should throw NotFoundException if the job is not found or already paid', async () => {
+      prismaMock.$transaction.mockImplementation(async (callback) => {
+        prismaMock.jobs.findUnique.mockResolvedValue(null);
+        return callback(prismaMock);
+      });
+
+      await expect(service.payForJob(1, 1)).rejects.toThrow(
+        new NotFoundException('Job not found or already paid for'),
+      );
+      expect(prismaMock.jobs.findUnique).toHaveBeenCalled();
+      expect(prismaMock.profiles.update).not.toHaveBeenCalled();
+      expect(prismaMock.jobs.update).not.toHaveBeenCalled();
       expect(prismaMock.jobs.findUnique).toHaveBeenCalledWith({
         where: {
           id: 1,
@@ -151,7 +161,10 @@ describe('JobsService', () => {
         },
       };
 
-      prismaMock.jobs.findUnique.mockResolvedValue(mockJob);
+      prismaMock.$transaction.mockImplementation(async (callback) => {
+        prismaMock.jobs.findUnique.mockResolvedValue(mockJob);
+        return callback(prismaMock);
+      });
       await expect(service.payForJob(1, 1)).rejects.toThrow(ForbiddenException);
       expect(prismaMock.jobs.findUnique).toHaveBeenCalledWith({
         where: {
@@ -188,11 +201,11 @@ describe('JobsService', () => {
         balance: new Prisma.Decimal(-500), // Resulting balance is negative
       };
 
-      prismaMock.jobs.findUnique.mockResolvedValue(mockJob);
-      prismaMock.$transaction.mockImplementation(async (callback) =>
-        callback(prismaMock),
-      );
-      prismaMock.profiles.update.mockResolvedValueOnce(mockProfileAfterUpdate);
+      prismaMock.$transaction.mockImplementation(async (callback) => {
+        prismaMock.jobs.findUnique.mockResolvedValue(mockJob);
+        prismaMock.profiles.update.mockResolvedValue(mockProfileAfterUpdate);
+        return callback(prismaMock);
+      });
 
       await expect(service.payForJob(1, 1)).rejects.toThrow(
         PreconditionFailedException,
@@ -334,6 +347,71 @@ describe('JobsService', () => {
       expect(prismaMock.profiles.update).toHaveBeenCalledWith({
         where: { id: mockJob.contract.contractor_id },
         data: { balance: { increment: job.price } },
+      });
+    });
+
+    it('should successfully pay for the job', async () => {
+      const clientProfile = {
+        ...mockProfile,
+        balance: new Prisma.Decimal(10000),
+      };
+
+      const contractorProfile = {
+        ...mockProfile,
+        balance: new Prisma.Decimal(5000),
+      };
+      const mockJob = {
+        ...job,
+        price: new Prisma.Decimal(1000),
+        is_paid: false,
+        updated_at: new Date(),
+        contract: {
+          client_id: 1,
+          contractor_id: 1,
+        },
+      };
+
+      prismaMock.$transaction.mockImplementation(async (callback) => {
+        prismaMock.jobs.findUnique.mockResolvedValue(mockJob);
+        prismaMock.profiles.update
+          .mockResolvedValueOnce({
+            ...clientProfile,
+            balance: clientProfile.balance.minus(mockJob.price),
+          })
+          .mockResolvedValueOnce({
+            ...contractorProfile,
+            balance: contractorProfile.balance.plus(mockJob.price),
+          });
+        return callback(prismaMock);
+      });
+
+      const result = await service.payForJob(1, 1);
+      expect(result.balance.toNumber()).toBe(9000);
+      expect(prismaMock.jobs.findUnique).toHaveBeenCalledWith({
+        where: {
+          id: 1,
+          is_paid: false,
+        },
+        include: {
+          contract: {
+            select: {
+              client_id: true,
+              contractor_id: true,
+            },
+          },
+        },
+      });
+      expect(prismaMock.profiles.update).toHaveBeenCalledTimes(2);
+      expect(prismaMock.jobs.update).toHaveBeenCalledWith({
+        where: {
+          id: 1,
+          is_paid: false,
+          updated_at: mockJob.updated_at,
+        },
+        data: {
+          is_paid: true,
+          paid_date: expect.any(Date),
+        },
       });
     });
   });
