@@ -4,13 +4,8 @@
 
 The Contract and Payment Service is designed to manage contracts and payments between clients and contractors. Key features include transaction handling, concurrency management, and efficient database querying.
 
-## Technology Stack
-
-- **NestJS**: A progressive Node.js framework for building scalable server-side applications.
-- **PostgreSQL**: A powerful, open-source relational database system.
-
-
 ## Live URL
+
    ```bash
    https://contract-payment-service.onrender.com
    ```
