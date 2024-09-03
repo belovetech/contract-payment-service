@@ -39,6 +39,12 @@ Use the `createProfilesWithContractsAndJobs` function to seed the database with 
 - Contractors with various professions.
 - Different contract statuses (`new`, `in_progress`, `terminated`).
 
+
+## Live URL
+   ```bash
+   https://contract-payment-service.onrender.com
+   ```
+
 ## Getting Started
 
 1. **Clone the Repository:**
@@ -59,7 +65,7 @@ Use the `createProfilesWithContractsAndJobs` function to seed the database with 
    Configure PostgreSQL and update your `.env` file. Run migrations:
 
    ```bash
-   npx prisma migrate dev
+   npm run db:migrate
    ```
 
 4. **Seed the Database:**
@@ -82,13 +88,15 @@ Use the `createProfilesWithContractsAndJobs` function to seed the database with 
 
 7. **Swagger Documentation:**
 
-   Access the Swagger docs at: `<base_url>/api/v1/docs`
+   Access the Swagger docs at: `https://contract-payment-service.onrender.com/api/v1/docs`
+
+   ![alt text](image.png)
 
 ## Docker Setup
 
 1. **Create Docker Environment Files:**
 
-   Ensure `.env.docker` and `.env.docker.test` files are set up based on `.env.sample`.
+   Ensure `.env.docker` and `.env.docker.test` files are set up based on .env.sample.
 
 2. **Start Docker Containers:**
 
