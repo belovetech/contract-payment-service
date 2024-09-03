@@ -13,21 +13,21 @@ export const clients: Profile[] = [
     first_name: 'John',
     last_name: 'Doe',
     profession: 'Client_1',
-    balance: 0,
+    balance: 100000,
     role: 'client',
   },
   {
     first_name: 'Jane',
     last_name: 'Doe',
     profession: 'Client_2',
-    balance: 0,
+    balance: 200000,
     role: 'client',
   },
   {
     first_name: 'Alice',
     last_name: 'Doe',
-    profession: 'Client_2',
-    balance: 0,
+    profession: 'Client_3',
+    balance: 150000,
     role: 'client',
   },
 ];
@@ -40,7 +40,6 @@ export const contractors: Profile[] = [
     balance: 0,
     role: 'contractor',
   },
-
   {
     first_name: 'David',
     last_name: 'Doe',

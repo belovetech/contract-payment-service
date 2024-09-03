@@ -33,7 +33,7 @@ export class BalancesService {
         );
       }
       throw new PreconditionFailedException(
-        `You cannot deposit more than ${allowedDepositLimit} at once`,
+        `You cannot deposit more than ${allowedDepositLimit.toFixed(2)} at once`,
       );
     }
 

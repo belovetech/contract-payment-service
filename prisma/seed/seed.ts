@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { clients, contractors, contracts, Job, jobs } from './data/';
 
 const prisma = new PrismaClient();
@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
  * Iterates through each client and contractor profile data to create corresponding profiles in the database.
  * Creates a contract linking the client and contractor profiles, then assigns random jobs to the contract.
  */
-async function createProfileWithContractAndJobs(): Promise<void> {
+async function createProfilesWithContractsAndJobs(): Promise<void> {
   for (let i = 0; i < clients.length; i++) {
     const clientProfile = await prisma.profiles.create({
       data: clients[i],
@@ -18,22 +18,27 @@ async function createProfileWithContractAndJobs(): Promise<void> {
       data: contractors[i],
     });
 
-    const contract = await prisma.contracts.create({
-      data: {
-        ...contracts[i],
-        client_id: clientProfile.id,
-        contractor_id: contractorProfile.id,
-      },
-    });
-
-    const randomJobs = getThreeRandomjobs(jobs, 3);
-    for (let j = 0; j < randomJobs.length; j++) {
-      await prisma.jobs.create({
+    for (let k = 0; k < 2; k++) {
+      const contract = await prisma.contracts.create({
         data: {
-          ...randomJobs[j],
-          contract_id: contract.id,
+          ...contracts[k % contracts.length],
+          client_id: clientProfile.id,
+          contractor_id: contractorProfile.id,
         },
       });
+
+      const randomJobs = getThreeRandomjobs(jobs, 3);
+      for (let j = 0; j < randomJobs.length; j++) {
+        await prisma.jobs.create({
+          data: {
+            ...randomJobs[j],
+            contract_id: contract.id,
+            price: new Prisma.Decimal(Math.random() * 1000 + 500),
+            is_paid: Math.random() < 0.5,
+            paid_date: Math.random() < 0.5 ? new Date() : null,
+          },
+        });
+      }
     }
   }
 }
@@ -57,11 +62,13 @@ function getThreeRandomjobs(jobs: Job[], num: number): Job[] {
 async function main() {
   console.info('Start seeding ...');
   if (process.env.NODE_ENV !== 'production') {
+    console.info('Truncating tables ...');
     await prisma.$executeRaw`TRUNCATE TABLE "jobs" CASCADE`;
     await prisma.$executeRaw`TRUNCATE TABLE "contracts" CASCADE`;
     await prisma.$executeRaw`TRUNCATE TABLE "profiles" CASCADE`;
+    console.log('Tables truncated.');
   }
-  createProfileWithContractAndJobs();
+  createProfilesWithContractsAndJobs();
   console.info('Seeding finished.');
 }
 

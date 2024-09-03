@@ -7,52 +7,22 @@ export interface Job {
 
 export const jobs: Job[] = [
   {
-    description: 'job description',
+    description: 'Initial job',
     price: 1000,
-    is_paid: false,
+    is_paid: true,
   },
   {
-    description: 'job description',
+    description: 'Follow-up job',
     price: 2000,
-    is_paid: false,
+    is_paid: true,
   },
   {
-    description: 'job description',
-    price: 3000,
-    is_paid: false,
-  },
-  {
-    description: 'job description',
-    price: 4000,
-    is_paid: false,
-  },
-  {
-    description: 'job description',
+    description: 'High value job',
     price: 5000,
     is_paid: false,
   },
   {
-    description: 'job description',
-    price: 6000,
-    is_paid: false,
-  },
-  {
-    description: 'job description',
-    price: 7000,
-    is_paid: false,
-  },
-  {
-    description: 'job description',
-    price: 8000,
-    is_paid: false,
-  },
-  {
-    description: 'job description',
-    price: 9000,
-    is_paid: false,
-  },
-  {
-    description: 'job description',
+    description: 'Final job',
     price: 10000,
     is_paid: false,
   },

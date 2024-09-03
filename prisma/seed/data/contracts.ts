@@ -9,15 +9,15 @@ interface Contract {
 
 export const contracts: Contract[] = [
   {
-    terms: 'Terms and conditions',
+    terms: 'Software development project',
     status: contracts_status.new,
   },
   {
-    terms: 'Terms and conditions',
+    terms: 'Design project',
     status: contracts_status.in_progress,
   },
   {
-    terms: 'Terms and conditions',
+    terms: 'Graphic design project',
     status: contracts_status.terminated,
   },
 ];

@@ -26,8 +26,8 @@ export class AdminService {
       ORDER BY total_earnings DESC
       LIMIT 1;
     `;
-    const bestProfession = result as BestProfession;
-    return bestProfession[0].profession || null;
+
+    return (result && result[0]?.profession) || null;
   }
 
   /**
@@ -43,6 +43,7 @@ export class AdminService {
     end: string,
     limit: number = 2,
   ): Promise<BestClients> {
+    if (isNaN(limit)) limit = 2;
     const { startDate, endDate } = this.validateDate(start, end);
     const result = await this.prisma.$queryRaw`
     SELECT p.id AS client_id, CONCAT(p.first_name, ' ', p.last_name) AS full_name, SUM(j.price) AS total_paid
