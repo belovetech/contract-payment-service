@@ -15,6 +15,7 @@ import { GetProfilesDto } from './dto/get-profiles.dto';
 import {
   ApiCreatedResponse,
   ApiHeader,
+  ApiOperation,
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
@@ -26,6 +27,8 @@ export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) {}
 
   @Post()
+  @ApiCreatedResponse({ type: CreateProfileDto })
+  @ApiOperation({ description: 'Create a profile' })
   async create(@Body() payload: CreateProfileDto) {
     try {
       this.logger.log('Start: Creating profile');
@@ -46,6 +49,7 @@ export class ProfilesController {
 
   @UseGuards(AuthGuard)
   @ApiHeader({ name: 'profile_id', required: true })
+  @ApiOperation({ description: 'Retrieve profile' })
   @Get('me')
   async getProfile(@Request() { profile }) {
     try {
@@ -66,6 +70,7 @@ export class ProfilesController {
   @Get()
   @ApiCreatedResponse({ type: GetProfilesDto })
   @ApiQuery({ name: 'role', required: false, enum: ['client', 'contractor'] })
+  @ApiOperation({ description: 'Retrieve all profiles' })
   async getAllProfiles(@Query() { role }: GetProfilesDto) {
     try {
       this.logger.log('Start: Retrieving all profiles');

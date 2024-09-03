@@ -10,8 +10,8 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get('best-profession')
-  @ApiQuery({ name: 'start', required: true })
-  @ApiQuery({ name: 'end', required: true })
+  @ApiQuery({ name: 'start', required: true, example: '2024-08-01' })
+  @ApiQuery({ name: 'end', required: true, example: '2024-09-31' })
   @ApiOperation({
     description: 'Fetch the best profession based on total earnings',
   })
@@ -37,8 +37,8 @@ export class AdminController {
   }
 
   @Get('best-clients')
-  @ApiQuery({ name: 'start', required: true })
-  @ApiQuery({ name: 'end', required: true })
+  @ApiQuery({ name: 'start', required: true, example: '2024-08-01' })
+  @ApiQuery({ name: 'end', required: true, example: '2024-09-31' })
   @ApiQuery({ name: 'limit', required: false, description: 'Default: 2' })
   @ApiOperation({
     description: 'Fetch the best clients based on total amount paid',
