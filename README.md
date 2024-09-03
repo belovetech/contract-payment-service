@@ -9,36 +9,6 @@ The Contract and Payment Service is designed to manage contracts and payments be
 - **NestJS**: A progressive Node.js framework for building scalable server-side applications.
 - **PostgreSQL**: A powerful, open-source relational database system.
 
-## API Endpoints
-
-- **GET `/contracts/:id`**: Retrieve a specific contract if associated with the requesting user.
-- **GET `/contracts`**: List active contracts for a user (client or contractor).
-- **GET `/jobs/unpaid`**: List unpaid jobs for a user under active contracts.
-- **POST `/jobs/:job_id/pay`**: Pay for a job if the client has sufficient balance.
-- **POST `/balances/deposit/:userId`**: Deposit funds into a client's balance, restricted to 25% of total outstanding payments.
-- **GET `/admin/best-profession?start=<date>&end=<date>`**: Get the profession that earned the most within a specified date range.
-- **GET `/admin/best-clients?start=<date>&end=<date>&limit=<integer>`**: Get clients who paid the most within a date range, with a default limit of 2.
-
-## Authentication
-
-Authentication is managed via middleware that retrieves user profiles based on the profile ID provided in request headers. If the profile is not found, a 401 Unauthorized status is returned.
-
-## Database Schema
-
-The schema includes:
-
-- **Profiles**: Stores client and contractor profiles.
-- **Contracts**: Manages contracts between clients and contractors.
-- **Jobs**: Tracks jobs and payment details.
-
-## Data Seeding
-
-Use the `createProfilesWithContractsAndJobs` function to seed the database with profiles, contracts, and jobs. This setup includes:
-
-- High-value client contracts.
-- Contractors with various professions.
-- Different contract statuses (`new`, `in_progress`, `terminated`).
-
 
 ## Live URL
    ```bash
