@@ -7,6 +7,16 @@ import { Profile } from './entities/profile.entity';
 export class BalancesService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Deposits funds into the client's balance based on the specified amount, considering the outstanding payments.
+   * Calculates the allowed deposit limit as 25% of the total outstanding payments.
+   * If the amount exceeds the allowed limit, throws a PreconditionFailedException with an appropriate message.
+   * Updates the client's balance by incrementing the specified amount.
+   *
+   * @param client The client's profile to deposit funds for.
+   * @param amount The amount to deposit into the client's balance.
+   * @returns A Promise that resolves to the updated profile after depositing the funds.
+   */
   async depositFunds(client: Profile, amount: number): Promise<profiles> {
     const totalOutstandingPayments = await this.prisma.jobs.aggregate({
       _sum: {
