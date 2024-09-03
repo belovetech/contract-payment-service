@@ -86,7 +86,7 @@ To set up the project locally, follow these steps:
 1. **Clone the Repository**:
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/belovetech/contract_payment_service.git
    cd contract-payment-service
    ```
 
@@ -120,13 +120,19 @@ To set up the project locally, follow these steps:
    ```
 
 6. **Run Tests**:
+
    ```bash
    npm run test
    ```
 
-To set up the project using docker, follow these steps:
+7. **Swagger Documentation**
 
-### Docker Commands
+   ```bash
+   <base_url>/api/v1/docs
+   ```
+## Docker Setup
+
+To set up the project using docker, follow these steps:
 
 - **Start Docker Containers:**
 
