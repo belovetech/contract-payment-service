@@ -28,7 +28,8 @@ jobs:
           --health-retries=5
         # Wait for the PostgreSQL service to be ready
         # before the next step in the job
-        timeout: 10s
+        # timeout: 10s
+        
 
     steps:
       - name: Checkout code
