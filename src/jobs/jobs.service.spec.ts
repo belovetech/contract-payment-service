@@ -40,12 +40,6 @@ describe('JobsService', () => {
   });
 
   describe('CreateJob', () => {
-    // it('should create a job', async () => {
-    //   prismaMock.contracts.findUnique.mockResolvedValue(contract);
-    //   prismaMock.jobs.create.mockResolvedValue(job);
-    //   const result = await service.createJob({ ...job, price: 1000 });
-    //   expect(result).toEqual(job);
-    // });
     it('should create a job if the contract exists', async () => {
       const createJobDto = {
         contract_id: 1,

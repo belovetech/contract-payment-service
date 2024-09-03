@@ -13,7 +13,13 @@ import {
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { AuthGuard } from '../middlewares/auth';
-import { ApiHeader, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiHeader,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { PaginationParam } from 'src/utils/types';
 
 @Controller('jobs')
@@ -23,6 +29,8 @@ export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
 
   @Post()
+  @ApiHeader({ name: 'profile_id', required: true })
+  @ApiOperation({ description: 'Create a job' })
   async create(@Body() createJobDto: CreateJobDto) {
     this.logger.log('Start: Creating job');
     try {
@@ -43,8 +51,9 @@ export class JobsController {
 
   @UseGuards(AuthGuard)
   @ApiHeader({ name: 'profile_id', required: true })
-  @ApiQuery({ name: 'page_size', required: false })
-  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'page_size', required: false, example: 5 })
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiOperation({ description: 'Fetch all unpaid jobs' })
   @Get('unpaid')
   async getUnpaidJobs(@Request() { profile }, @Query() query: PaginationParam) {
     try {
@@ -68,6 +77,7 @@ export class JobsController {
   @Post(':job_id/pay')
   @ApiParam({ name: 'job_id', required: true })
   @ApiHeader({ name: 'profile_id', required: true })
+  @ApiOperation({ description: 'Pay for a job' })
   async payForJob(
     @Request() { profile },
     @Param('job_id', ParseIntPipe) job_id: number,

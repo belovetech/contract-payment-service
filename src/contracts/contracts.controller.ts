@@ -12,7 +12,7 @@ import {
 import { ContractsService } from './contracts.service';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { AuthGuard } from '../middlewares/auth';
-import { ApiHeader, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiHeader, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { PaginationParam } from 'src/utils/types';
 
 @Controller('contracts')
@@ -24,6 +24,7 @@ export class ContractsController {
   @Post()
   @UseGuards(AuthGuard)
   @ApiHeader({ name: 'profile_id', required: true })
+  @ApiOperation({ description: 'Create a contract' })
   async create(
     @Body() createContractDto: CreateContractDto,
     @Request() { profile },
@@ -53,6 +54,7 @@ export class ContractsController {
   @ApiHeader({ name: 'profile_id', required: true })
   @ApiQuery({ name: 'page_size', required: false })
   @ApiQuery({ name: 'page', required: false })
+  @ApiOperation({ description: 'Fetch all contracts' })
   async getContracts(@Request() { profile }, @Query() query: PaginationParam) {
     try {
       this.logger.log('Start: Retrieving contracts');
@@ -81,6 +83,7 @@ export class ContractsController {
   @UseGuards(AuthGuard)
   @ApiParam({ name: 'id', required: true })
   @ApiHeader({ name: 'profile_id', required: true })
+  @ApiOperation({ description: 'Fetch a contract by id' })
   async getContractById(@Param('id') id: number, @Request() { profile }) {
     try {
       this.logger.log('Start: Retrieving contract');

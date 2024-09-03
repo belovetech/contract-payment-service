@@ -1,7 +1,7 @@
 import { Controller, Get, Query, Logger } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { Response } from '../types/response.type';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @Controller('admin')
 @ApiTags('Admin')
@@ -12,6 +12,9 @@ export class AdminController {
   @Get('best-profession')
   @ApiQuery({ name: 'start', required: true })
   @ApiQuery({ name: 'end', required: true })
+  @ApiOperation({
+    description: 'Fetch the best profession based on total earnings',
+  })
   async getBestProfession(
     @Query('start') start: string,
     @Query('end') end: string,
@@ -37,6 +40,9 @@ export class AdminController {
   @ApiQuery({ name: 'start', required: true })
   @ApiQuery({ name: 'end', required: true })
   @ApiQuery({ name: 'limit', required: false, description: 'Default: 2' })
+  @ApiOperation({
+    description: 'Fetch the best clients based on total amount paid',
+  })
   async getBestClients(
     @Query('start') start: string,
     @Query('end') end: string,
