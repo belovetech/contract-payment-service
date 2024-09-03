@@ -7,7 +7,7 @@ import { ProfilesService } from '../profiles/profiles.service';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
 import { mockContract, mockJob, mockJobs, query } from '../test-utils';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import PaginationUtil from '../utils/pagination.util';
 
 describe('JobsController', () => {

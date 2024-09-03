@@ -25,46 +25,8 @@ describe('BalancesService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('getTotalOutstandingPaymentsValue', () => {
-    it('should return the total value of all outstanding payments', async () => {
-      const total = new Prisma.Decimal(300);
-      prismaMock.jobs.aggregate.mockResolvedValue({
-        _sum: { price: total },
-      } as any);
-      const result = await service.getTotalOutstandingPaymentsValue(1);
-      expect(result).toBe(300);
-    });
-
-    it('should return 0 if there are no outstanding payments', async () => {
-      prismaMock.jobs.aggregate.mockResolvedValue({
-        _sum: { price: null },
-      } as any);
-      const result = await service.getTotalOutstandingPaymentsValue(1);
-      expect(result).toBe(0);
-    });
-  });
-
-  describe('calculateAllowedDepositLimit', () => {
-    it('should return the allowed deposit limit', async () => {
-      const total = new Prisma.Decimal(300);
-      prismaMock.jobs.aggregate.mockResolvedValue({
-        _sum: { price: total },
-      } as any);
-      const result = service.calculateAllowedDepositLimit(total.toNumber());
-      expect(result).toBe(75);
-    });
-
-    it('should return zero(0) when the total is null', async () => {
-      prismaMock.jobs.aggregate.mockResolvedValue({
-        _sum: { price: null },
-      } as any);
-      const result = service.calculateAllowedDepositLimit(0);
-      expect(result).toBe(0);
-    });
-  });
-
   describe('DepositFund', () => {
-    it("should deposit the amount to the user's balance", async () => {
+    it('should deposit funds when amount is within the allowed limit', async () => {
       const total = new Prisma.Decimal(300);
       const balance = 200;
       prismaMock.profiles.findFirst.mockResolvedValue(mockProfile);

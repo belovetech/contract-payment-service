@@ -7,6 +7,13 @@ import { BestClients } from './entities/best.clients';
 export class AdminService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Retrieves the best profession based on total earnings within a specified date range.
+   *
+   * @param start The start date of the date range.
+   * @param end The end date of the date range.
+   * @returns The best profession as a string or null if no data is found.
+   */
   async getBestProfession(start: string, end: string): Promise<string | null> {
     const { startDate, endDate } = this.validateDate(start, end);
     const result = await this.prisma.$queryRaw`
@@ -23,6 +30,14 @@ export class AdminService {
     return bestProfession[0].profession || null;
   }
 
+  /**
+   * Retrieves the best clients based on total amount paid within a specified date range.
+   *
+   * @param start The start date of the date range.
+   * @param end The end date of the date range.
+   * @param limit The maximum number of best clients to retrieve (default is 2).
+   * @returns A Promise that resolves to the best clients as an array of objects with 'id', 'full_name', and 'total_paid' properties.
+   */
   async getBestClients(
     start: string,
     end: string,
@@ -42,6 +57,14 @@ export class AdminService {
     return result as BestClients;
   }
 
+  /**
+   * Validates the start and end date strings and converts them to Date objects.
+   *
+   * @param start The start date string.
+   * @param end The end date string.
+   * @returns An object containing startDate and endDate as Date objects.
+   * @throws BadRequestException if start or end date is missing, date format is invalid, or start date is later than end date.
+   */
   public validateDate(
     start: string,
     end: string,

@@ -5,7 +5,7 @@ import { PrismaService } from '../prismaClient/prisma.service';
 import { ProfilesService } from './profiles.service';
 import { ProfilesController } from './profiles.controller';
 import { CreateProfileDto } from './dto/create-profile.dto';
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { EmptyLogger } from '../test-utils/empty.logger';
 import { mockProfile, mockProfiles } from '../test-utils';
 

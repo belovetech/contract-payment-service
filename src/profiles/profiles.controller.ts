@@ -13,8 +13,6 @@ import { CreateProfileDto } from './dto/create-profile.dto';
 import { AuthGuard } from '../middlewares/auth';
 import { GetProfilesDto } from './dto/get-profiles.dto';
 import {
-  ApiBearerAuth,
-  ApiBody,
   ApiCreatedResponse,
   ApiHeader,
   ApiQuery,
