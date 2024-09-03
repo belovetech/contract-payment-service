@@ -2,165 +2,155 @@
 
 ## Overview
 
-This project is a case study of a Contract and Payment Service, designed to validate core skills and competencies essential for the role of Payment Engineer. The service handles the creation and management of contracts and payments between clients and contractors, ensuring secure and efficient transactions. The project includes key functionalities such as handling transactions and locks, race condition management, concurrency at scale, and efficient database querying.
+The Contract and Payment Service is designed to manage contracts and payments between clients and contractors. Key features include transaction handling, concurrency management, and efficient database querying.
 
-## Stack
+## Technology Stack
 
-The project uses the following technology stack:
-
-- **NestJS**: A progressive Node.js framework for building efficient, reliable, and scalable server-side applications.
-- **PostgreSQL**: A powerful, open-source object-relational database system.
-
-## Models
-
-### Profile Model
-
-Profiles are categorized as either clients or contractors. Clients create contracts with contractors, who perform jobs under these contracts and receive payments. Each profile has a `balance` property to manage their available funds.
-
-### Contract Model
-
-Contracts represent the agreement between clients and contractors. Contracts have three statuses: `new`, `in_progress`, and `terminated`. Only contracts with the `in_progress` status are considered active. Contracts group individual jobs within them.
-
-### Job Model
-
-Jobs represent tasks that contractors perform under a contract. Contractors receive payment for completed jobs, which are linked to specific contracts.
+- **NestJS**: A progressive Node.js framework for building scalable server-side applications.
+- **PostgreSQL**: A powerful, open-source relational database system.
 
 ## API Endpoints
 
-The following endpoints are implemented:
-
-- **GET `/contracts/:id`**: Returns a contract only if it is associated with the profile making the request.
-
-- **GET `/contracts`**: Returns a list of contracts associated with a user (either a client or contractor). Only active contracts (not terminated) are included.
-
-- **GET `/jobs/unpaid`**: Returns all unpaid jobs for a user (either a client or contractor) under active contracts only.
-
-- **POST `/jobs/:job_id/pay`**: Allows a client to pay for a job if their balance is sufficient. The payment amount is transferred from the client's balance to the contractor's balance.
-
-- **POST `/balances/deposit/:userId`**: Deposits funds into a client's balance. The deposit is restricted to a maximum of 25% of the client's total outstanding payments for jobs at the time of deposit.
-
-- **GET `/admin/best-profession?start=<date>&end=<date>`**: Returns the profession that earned the most money within the specified date range.
-
-- **GET `/admin/best-clients?start=<date>&end=<date>&limit=<integer>`**: Returns the clients who paid the most for jobs within the specified date range. The query includes a limit parameter, with the default set to 2.
+- **GET `/contracts/:id`**: Retrieve a specific contract if associated with the requesting user.
+- **GET `/contracts`**: List active contracts for a user (client or contractor).
+- **GET `/jobs/unpaid`**: List unpaid jobs for a user under active contracts.
+- **POST `/jobs/:job_id/pay`**: Pay for a job if the client has sufficient balance.
+- **POST `/balances/deposit/:userId`**: Deposit funds into a client's balance, restricted to 25% of total outstanding payments.
+- **GET `/admin/best-profession?start=<date>&end=<date>`**: Get the profession that earned the most within a specified date range.
+- **GET `/admin/best-clients?start=<date>&end=<date>&limit=<integer>`**: Get clients who paid the most within a date range, with a default limit of 2.
 
 ## Authentication
 
-Authentication is handled via middleware that retrieves a user profile from the database based on a profile ID provided in the request headers. If no profile is found, the middleware responds with a 401 Unauthorized status.
+Authentication is managed via middleware that retrieves user profiles based on the profile ID provided in request headers. If the profile is not found, a 401 Unauthorized status is returned.
 
 ## Database Schema
 
-The database schema includes the following tables:
+The schema includes:
 
 - **Profiles**: Stores client and contractor profiles.
 - **Contracts**: Manages contracts between clients and contractors.
-- **Jobs**: Tracks jobs performed under contracts, including payment details.
-
-The schema uses the following ENUM types:
-
-- `profiles_role`: Defines the role of a profile as either `client` or `contractor`.
-- `contracts_status`: Defines the status of a contract as `new`, `in_progress`, or `terminated`.
+- **Jobs**: Tracks jobs and payment details.
 
 ## Data Seeding
 
-The data seeding function `createProfilesWithContractsAndJobsp` creates profiles, contracts, and jobs to test various functionalities:
+Use the `createProfilesWithContractsAndJobs` function to seed the database with profiles, contracts, and jobs. This setup includes:
 
-- **Best Client**: A client with high-value contracts and multiple payments.
-- **Best Profession**: Contractors with different professions and varying job payments.
-- **Contract Management**: Different contract statuses (`new`, `in_progress`, `terminated`) and associated jobs.
-
-This seeding ensures the database is populated with sufficient data to test core features of the service.
-
-## Testing
-
-The service includes comprehensive unit tests to validate functionality, including:
-
-- **Profile Creation**: Verifies profile creation for clients and contractors.
-- **Contract and Job Management**: Ensures contracts and jobs are created, queried, and updated correctly.
-- **Payment Handling**: Tests payment transactions, including balance updates and payment restrictions.
-- **Best Client and Profession**: Validates the queries that determine the best client and profession within a specified date range.
+- High-value client contracts.
+- Contractors with various professions.
+- Different contract statuses (`new`, `in_progress`, `terminated`).
 
 ## Getting Started
 
-To set up the project locally, follow these steps:
-
-1. **Clone the Repository**:
+1. **Clone the Repository:**
 
    ```bash
    git clone https://github.com/belovetech/contract_payment_service.git
    cd contract-payment-service
    ```
 
-2. **Install Dependencies**:
+2. **Install Dependencies:**
 
    ```bash
    npm install
    ```
 
-3. **Set Up the Database**:
+3. **Set Up the Database:**
 
-   Configure PostgreSQL and update the `.env` file with the correct database connection details.
-   Run migrations to set up the database schema:
+   Configure PostgreSQL and update your `.env` file. Run migrations:
 
    ```bash
    npx prisma migrate dev
    ```
 
-4. **Seed the Database**:
-
-   Seed the database with initial data:
+4. **Seed the Database:**
 
    ```bash
-   npm run seed
+   npm run db:seed
    ```
 
-5. **Start the Application**:
+5. **Start the Application:**
 
    ```bash
    npm run start:dev
    ```
 
-6. **Run Tests**:
+6. **Run Tests:**
 
    ```bash
    npm run test
    ```
 
-7. **Swagger Documentation**
+7. **Swagger Documentation:**
 
-   ```bash
-   <base_url>/api/v1/docs
-   ```
+   Access the Swagger docs at: `<base_url>/api/v1/docs`
+
 ## Docker Setup
 
-To set up the project using docker, follow these steps:
+1. **Create Docker Environment Files:**
 
-- **Start Docker Containers:**
+   Ensure `.env.docker` and `.env.docker.test` files are set up based on `.env.sample`.
 
-  ```bash
-  npm run docker:start
-  ```
+2. **Start Docker Containers:**
 
-- **Stop Docker Containers:**
+   ```bash
+   npm run docker:start
+   ```
 
-  ```bash
-  npm run docker:stop
-  ```
+3. **Stop Docker Containers:**
 
-- **Run Tests in Docker Container:**
+   ```bash
+   npm run docker:stop
+   ```
 
-  ```bash
-  npm run docker:test:start
-  npm run docker:test:exec
-  ```
+4. **Run Tests in Docker Container:**
 
-### Testing
+   ```bash
+   npm run docker:test:start
+   npm run docker:test:exec
+   ```
 
-- **Run All Tests:**
+## Approach and Decisions
 
-  ```bash
-  npm run test
-  ```
+### 1. Authentication
 
-## Conclusion
+**Current Approach:** The authentication mechanism uses the `id` column (an integer) from the `profiles` table, identified by the header name `profile_id`. This method is straightforward and simplifies testing by using integer IDs.
 
-This project demonstrates the implementation of a robust contract and payment service, handling critical operations such as transaction management, concurrency, and secure payment processing. The service is designed to be scalable, efficient, and easy to maintain, making it a solid foundation for any payment-oriented application.
+**Considerations:**
+
+- **Scalability and Flexibility:** In a production environment, UUIDs or ULIDs would typically be used instead of integers. UUIDs (Universally Unique Identifiers) or ULIDs (Universally Unique Lexicographically Sortable Identifiers) offer better scalability and sorting capabilities, making it easier to manage and query large datasets.
+- **Testing Simplicity:** Using integers for profile IDs simplifies the testing and implementation phase, especially in a case study or assessment scenario where ease of implementation is prioritized over advanced features.
+
+### 2. Transactions and Locks
+
+**Current Approach:** To ensure data integrity and prevent race conditions, all database operations are performed within a single interactive transaction using Prisma. This approach maintains atomicity, ensuring that all operations within the transaction are completed successfully before committing changes.
+
+**Considerations:**
+
+- **Atomicity:** Prisma’s interactive transactions are used to guarantee that all operations within a transaction are treated as a single unit of work. If any operation fails, the transaction is rolled back, preserving the consistency of the database.
+- **Isolation Level:** PostgreSQL’s default `read committed` isolation level is used, which is suitable for our use case. This isolation level prevents dirty reads and ensures that transactions do not interfere with each other, avoiding issues like deadlocks.
+
+### 3. Handling Race Conditions
+
+**Current Approach:** A single transaction context is used to handle race conditions. This means that all database operations related to a particular transaction are executed as one indivisible unit.
+
+**Considerations:**
+
+- **Atomicity:** By grouping all related database operations into a single transaction, we ensure that they are executed sequentially and as a cohesive unit. This approach minimizes the risk of race conditions, where concurrent operations could lead to inconsistent or erroneous data states.
+
+### 4. Payment for Jobs
+
+**Current Approach:** It is assumed that a client will always pay for a job in full. This simplification avoids the need for additional mechanisms to handle partial payments.
+
+**Considerations:**
+
+- **Partial Payments:** If partial payments were allowed, additional database columns would be necessary to track payment balances. Furthermore, implementing idempotency mechanisms would be crucial to prevent issues such as duplicate payments or concurrent transactions affecting the same job.
+- **Idempotency:** Idempotency ensures that repeated transactions do not lead to unintended side effects. This is especially important in systems handling financial transactions to avoid processing the same payment multiple times.
+
+### 5. Creating Extra Endpoints
+
+**Current Approach:** To facilitate comprehensive testing, five additional endpoints were implemented. These endpoints include functionality for creating profiles, jobs, and contracts, among others.
+
+**Considerations:**
+
+- **Testing Coverage:** The extra endpoints and a robust seeding script were designed to populate the database with a variety of test data. This ensures that all features and edge cases are thoroughly tested, providing a more complete validation of the system’s capabilities.
+- **Data Seeding:** The seeding process systematically generates diverse data scenarios, allowing for effective testing of core functionalities and ensuring that the system can handle various use cases and conditions.
