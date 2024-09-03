@@ -35,31 +35,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build Docker image
-        run: docker build -t contract_payment_system .
-
-      - name: Run Docker container
-        env:
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-        run: |
-          docker run -d \
-            --name contract_payment_system \
-            --env POSTGRES_USER="$POSTGRES_USER" \
-            --env POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
-            --env POSTGRES_DB="$POSTGRES_DB" \
-            contract_payment_system
-
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v2
+      # - name: Build Docker image
+      #   run: docker build -t contract_payment_system .
+      # - name: Run Docker container
+      #   env:
+      #     POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      #     POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      #     POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      #   run: |
+      #     docker run -d \
+      #       --name contract_payment_system \
+      #       --env POSTGRES_USER="$POSTGRES_USER" \
+      #       --env POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
+      #       --env POSTGRES_DB="$POSTGRES_DB" \
+      #       contract_payment_system
       - name: Run Tests
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          docker exec contract_payment_system \
-            sh -c "npm run test" # Replace with your test command
+          npm install
+          npm run test
+        # run: |
+        #   docker exec contract_payment_system \
+        #     sh -c "npm run test" # Replace with your test command
 
-      - name: Stop and Remove Docker container
-        run: |
-          docker stop contract_payment_system
-          docker rm contract_payment_system
+      # - name: Stop and Remove Docker container
+      # run: |
+      #   docker stop contract_payment_system
+      #   docker rm contract_payment_system
